@@ -5,4 +5,5 @@ export interface User {
   password: string;
   phone: string;
   avatar?: string;
+  createAt?: string;
 }
