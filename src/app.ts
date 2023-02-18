@@ -1,19 +1,18 @@
 import 'dotenv/config';
 import express from 'express';
-import db from './config/mongo.config';
+import morgan from 'morgan';
+import { connectDB } from './config/mongo.config';
 import { router } from './routes/index.route';
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
 
+app.use(morgan('dev'));
+app.use(express.json());
+
 app.use(router);
-db()
-  .then(() => {
-    console.log('Database connected successfully');
-  })
-  .catch(() => {
-    console.log('Database error connection');
-  });
+
+connectDB();
 
 try {
   app.listen(PORT, () => {
