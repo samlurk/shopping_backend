@@ -1,12 +1,11 @@
 import type { Request, Response } from 'express';
-import { User } from '../interfaces/user.interface';
-import { UserService } from '../services/user.service';
-import { encrypt, verified } from '../utils/bcrypt.handle';
+import { AuthService } from '../services/auth.service';
 
-export class authController<T extends Request, U extends Response> {
+export class AuthController<T extends Request, U extends Response> {
   async login({ body }: T, res: U): Promise<U> {
     try {
-      return res.status(200).send('User login sucessfully !!!');
+      const auth = new AuthService();
+      return res.status(200).send(await auth.loginUser(body));
     } catch (e) {
       return res.status(500).send({ message: e });
     }

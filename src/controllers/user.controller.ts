@@ -11,11 +11,12 @@ export class UserController<T extends Request, U extends Response> {
     }
   }
 
-  async getUser({ body }: T, res: U): Promise<Response> {
+  async getAll(_: T, res: U): Promise<U> {
     try {
-      return res.send('User received');
+      const userService = new UserService();
+      return res.status(200).send(await userService.getUsers());
     } catch (e) {
-      return res.status(500).send({ message: 'Error get user', sucess: false });
+      return res.status(500).send({ message: e, sucess: false });
     }
   }
 }
