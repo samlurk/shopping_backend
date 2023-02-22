@@ -7,7 +7,7 @@ export class AuthController<T extends Request, U extends Response> {
       const auth = new AuthService();
       return res.status(200).send(await auth.loginUser(body));
     } catch (e) {
-      return res.status(500).send({ message: e });
+      return res.status(500).send({ status: 'FAILED', message: e });
     }
   }
 }

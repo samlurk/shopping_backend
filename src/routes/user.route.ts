@@ -4,8 +4,11 @@ import { checkJwt } from '../middlewares/session.middleware';
 
 const router = Router();
 
-const { getAll } = new UserController();
+const { getAll, getOne, create, updateOne, deleteOne } = new UserController();
 
-router.get('/', checkJwt, getAll);
-
+router.get('/', getAll);
+router.get('/:id', getOne);
+router.post('/', create);
+router.put('/:id', updateOne);
+router.delete('/:id', deleteOne);
 export { router };
