@@ -17,3 +17,9 @@ export interface User extends WithId<Document> {
 export interface ReqExtJwt extends Request {
   user?: JwtPayload | string;
 }
+
+export interface ReqExtRole extends Request {
+  user?: {
+    role: Role;
+  };
+}

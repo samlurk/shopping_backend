@@ -3,8 +3,8 @@ import { ObjectId } from 'mongodb';
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
-export const generateToken = async (id: ObjectId, email: string) => {
-  const jwt = sign({ id, email }, JWT_SECRET, {
+export const generateToken = async (id: ObjectId, email: string, role: string) => {
+  const jwt = sign({ id, email, role }, JWT_SECRET, {
     expiresIn: '2h'
   });
   return jwt;

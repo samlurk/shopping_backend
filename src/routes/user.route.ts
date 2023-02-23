@@ -1,14 +1,15 @@
-import { Router, type Request, type Response } from 'express';
+import { Router } from 'express';
 import { UserController } from '../controllers/user.controller';
-import { checkJwt } from '../middlewares/session.middleware';
+import { Role } from '../enums/role.enum';
+import { checkJwt, checkRole } from '../middlewares/session.middleware';
 
 const router = Router();
 
 const { getAll, getOne, create, updateOne, deleteOne } = new UserController();
 
-router.get('/', getAll);
-router.get('/:id', getOne);
-router.post('/', create);
-router.put('/:id', updateOne);
-router.delete('/:id', deleteOne);
+router.get('/', checkJwt, checkRole(Role.Admin), getAll);
+router.get('/:id', checkJwt, checkRole(Role.Admin), getOne);
+router.post('/', checkJwt, checkRole(Role.Admin), create);
+router.put('/:id', checkJwt, checkRole(Role.Admin), updateOne);
+router.delete('/:id', checkJwt, checkRole(Role.Admin), deleteOne);
 export { router };
