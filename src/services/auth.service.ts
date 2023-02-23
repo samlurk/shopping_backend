@@ -1,5 +1,6 @@
 import { collections } from '../config/mongo.config';
 import { User } from '../interfaces/user.interface';
+import APIResponse from '../utils/APIResponse.handle';
 import { verified } from '../utils/bcrypt.handle';
 import { generateToken } from '../utils/jwt.handle';
 
@@ -9,16 +10,14 @@ export class AuthService {
       User,
       '_id' | 'email' | 'password'
     >;
-    if (!user) throw 'Incorrect email';
+    if (!user) throw APIResponse.badCredentials('Incorrect email');
     const checkPassword = await verified(password, user.password);
-    if (!checkPassword) throw 'Incorrect password';
+    if (!checkPassword) throw APIResponse.badCredentials('Incorrect password');
     return {
-      token: await generateToken(user.email),
-      data: {
-        user: {
-          id: user._id,
-          email: user.email
-        }
+      token: await generateToken(user._id, user.email),
+      user: {
+        id: user._id,
+        email: user.email
       }
     };
   }
