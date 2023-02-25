@@ -11,7 +11,7 @@ class APIResponse {
     };
     return response;
   }
-  static created(message: string, data: object) {
+  static created(message: string, data: unknown) {
     const response = {
       key: 'OK',
       message,
@@ -23,7 +23,7 @@ class APIResponse {
     return response;
   }
 
-  static updated(message: string, data: object) {
+  static updated(message: string, data: unknown) {
     const response = {
       key: 'UPDATE',
       message,
@@ -35,7 +35,7 @@ class APIResponse {
     return response;
   }
 
-  static ok(message: string, data: object) {
+  static ok(message: string, data: unknown) {
     const response = {
       key: 'OK',
       message,

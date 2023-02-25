@@ -3,6 +3,11 @@ import { Request } from 'express';
 import { Role } from '../enums/role.enum';
 import { JwtPayload } from 'jsonwebtoken';
 
+export interface MetaData {
+  lastLogin: Date;
+  isBlocked: boolean;
+  timezone: string;
+}
 export interface User extends WithId<Document> {
   firstName: string;
   lastName: string;
@@ -10,16 +15,12 @@ export interface User extends WithId<Document> {
   password: string;
   phone: string;
   role: Role;
+  address?: string;
   avatar?: string;
-  createAt?: string;
+  metadata: MetaData;
+  createAt?: Date;
 }
 
 export interface ReqExtJwt extends Request {
-  user?: JwtPayload | string;
-}
-
-export interface ReqExtRole extends Request {
-  user?: {
-    role: Role;
-  };
+  user?: JwtPayload | string | User;
 }

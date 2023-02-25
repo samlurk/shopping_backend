@@ -7,22 +7,26 @@ import APIResponse from '../utils/APIResponse.handle';
 
 export class UserService {
   // Adding new entry
-  async addUser(user: User) {
-    if (await this.getUserRequiredKeys({ phone: user.phone, email: user.email }))
-      throw APIResponse.forbidden('The registered email already exists');
-    user.password = await encrypt(user.password);
-    user.createAt = new Date().toJSON().slice(0, 10);
-    return (await collections.users?.insertOne(user as UserModel<User>)) as InsertOneResult;
+  async addUser({ firstName, lastName, email, password, role, phone }: Omit<User, 'id'>) {
+    // Verify if the email and phone entered exist in another registry.
+    const searchRequiredKeys = await this.getUserRequiredKeys({ email, phone });
+    if (searchRequiredKeys) {
+      if (email && searchRequiredKeys.email === email)
+        throw APIResponse.forbidden('The registered email already exists');
+      throw APIResponse.forbidden('The registered phone already exists');
+    }
+    password = await encrypt(password);
+    const userModel = new UserModel(firstName, lastName, email, password, role, phone);
+    return (await collections.users?.insertOne(userModel)) as InsertOneResult;
   }
 
-  // Verify if the email and phone entered exist in another registry.
-  async getUserRequiredKeys({ phone, email }: Pick<User, 'phone' | 'email'>) {
-    return await collections.users?.findOne(
+  async getUserRequiredKeys({ email, phone }: Pick<User, 'phone' | 'email'>) {
+    return (await collections.users?.findOne(
       {
-        $or: [{ phone }, { email }]
+        $or: [{ email }, { phone }]
       },
-      { projection: { _id: 1 } }
-    );
+      { projection: { _id: 1, email: 1, phone: 1 } }
+    )) as Pick<User, '_id' | 'phone' | 'email'> | null;
   }
 
   async getUsers(): Promise<User[]> {
@@ -47,5 +51,13 @@ export class UserService {
     const responseUser = await collections.users?.updateOne({ _id: new ObjectId(id) }, { $set: user });
     if (!responseUser?.matchedCount) throw APIResponse.notFound('User not found');
     return responseUser;
+  }
+
+  async blockOrUnlockUser(id: string, value: boolean) {
+    const responseUser = await collections.users?.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { metadata: { isBlocked: value } } }
+    );
+    if (!responseUser?.matchedCount) throw APIResponse.notFound('User not found');
   }
 }

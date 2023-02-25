@@ -56,4 +56,26 @@ export class UserController<T extends Request, U extends Response> {
       return res.status(typedError.code).send(typedError);
     }
   }
+
+  async blockUser({ params: { id } }: T, res: U) {
+    try {
+      const userService = new UserService();
+      const response = APIResponse.ok('User blocked', await userService.blockOrUnlockUser(id, true));
+      return res.status(response.code).send(response);
+    } catch (err) {
+      const typedError = err as HttpMessageResponse;
+      return res.status(typedError.code).send(typedError);
+    }
+  }
+
+  async unblockUser({ params: { id } }: T, res: U) {
+    try {
+      const userService = new UserService();
+      const response = APIResponse.ok('User unlocked', await userService.blockOrUnlockUser(id, false));
+      return res.status(response.code).send(response);
+    } catch (err) {
+      const typedError = err as HttpMessageResponse;
+      return res.status(typedError.code).send(typedError);
+    }
+  }
 }

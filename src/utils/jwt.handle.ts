@@ -1,10 +1,16 @@
 import { sign, verify } from 'jsonwebtoken';
 import { ObjectId } from 'mongodb';
+import { User } from '../interfaces/user.interface';
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
-export const generateToken = async (id: ObjectId, email: string, role: string) => {
-  const jwt = sign({ id, email, role }, JWT_SECRET, {
+export const generateToken = async ({
+  _id,
+  email,
+  role,
+  metadata: { isBlocked }
+}: Pick<User, '_id' | 'email' | 'password' | 'role' | 'metadata'>) => {
+  const jwt = sign({ _id, email, role, isBlocked }, JWT_SECRET, {
     expiresIn: '2h'
   });
   return jwt;
