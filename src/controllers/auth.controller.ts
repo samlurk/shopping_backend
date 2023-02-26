@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
-import APIResponse from '../utils/APIResponse.handle';
+import APIResponse from '../helpers/APIResponse.handle';
 import { HttpMessageResponse } from '../interfaces/httpMessageResponse.interface';
 
 export class AuthController<T extends Request, U extends Response> {

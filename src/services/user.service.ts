@@ -1,9 +1,9 @@
 import { collections } from '../config/mongo.config';
 import type { User } from '../interfaces/user.interface';
-import { encrypt } from '../utils/bcrypt.handle';
+import { encrypt } from '../helpers/bcrypt.handle';
 import UserModel from '../models/user.model';
 import { InsertOneResult, ObjectId } from 'mongodb';
-import APIResponse from '../utils/APIResponse.handle';
+import APIResponse from '../helpers/APIResponse.handle';
 
 export class UserService {
   // Adding new entry

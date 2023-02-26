@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { readDir } from '../utils/dynamic.import.handle';
+import { readDir } from '../helpers/dynamic.import.handle';
 
 const router = Router();
 

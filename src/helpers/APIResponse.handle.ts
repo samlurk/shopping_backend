@@ -89,12 +89,13 @@ class APIResponse {
     return response;
   }
 
-  static forbidden(message: string) {
+  static forbidden(message: string, data?: unknown) {
     const response = {
       key: 'FORBIDDEN',
       error: message,
       code: HttpStatusCode.FORBBIDEN,
-      status: 'error'
+      status: 'error',
+      data
     };
 
     return response;
