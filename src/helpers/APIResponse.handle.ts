@@ -1,138 +1,133 @@
 import { HttpStatusCode } from '../enums/httpStatusCode.enum';
-import { HttpMessageResponse } from '../interfaces/httpMessageResponse.interface';
-class APIResponse {
-  constructor({ key, code, error, status, data }: HttpMessageResponse) {
-    const response = {
-      key,
-      error,
-      code,
-      status,
-      data
-    };
-    return response;
-  }
-  static created(message: string, data: unknown) {
-    const response = {
-      key: 'OK',
-      message,
-      code: HttpStatusCode.CREATED,
-      data,
-      status: 'success'
-    };
+import type { HttpMessageResponse } from '../interfaces/httpMessageResponse.interface';
 
-    return response;
-  }
+export const customResponse = ({ key, code, error, status, data }: HttpMessageResponse): HttpMessageResponse => {
+  return {
+    key,
+    error,
+    code,
+    status,
+    data
+  };
+};
+export const created = (message: string, data?: unknown): HttpMessageResponse => {
+  const response = {
+    key: 'OK',
+    message,
+    code: HttpStatusCode.CREATED,
+    data,
+    status: 'success'
+  };
+  return response;
+};
 
-  static updated(message: string, data: unknown) {
-    const response = {
-      key: 'UPDATE',
-      message,
-      code: HttpStatusCode.OK,
-      data,
-      status: 'success'
-    };
+export const updated = (message: string, data?: unknown): HttpMessageResponse => {
+  const response = {
+    key: 'UPDATE',
+    message,
+    code: HttpStatusCode.OK,
+    data,
+    status: 'success'
+  };
 
-    return response;
-  }
+  return response;
+};
 
-  static ok(message: string, data: unknown) {
-    const response = {
-      key: 'OK',
-      message,
-      code: HttpStatusCode.OK,
-      data,
-      status: 'success'
-    };
+export const ok = (message: string, data?: unknown): HttpMessageResponse => {
+  const response = {
+    key: 'OK',
+    message,
+    code: HttpStatusCode.OK,
+    data,
+    status: 'success'
+  };
 
-    return response;
-  }
+  return response;
+};
 
-  static badRequest(message: string, data?: string) {
-    let response;
-    if (data) {
-      response = {
-        key: 'BAD_REQUEST',
-        error: message,
-        code: HttpStatusCode.BAD_REQUEST,
-        status: 'error',
-        data
-      };
-    }
-
+export const badRequest = (message: string, data?: string): HttpMessageResponse => {
+  let response;
+  if (data != null) {
     response = {
       key: 'BAD_REQUEST',
       error: message,
       code: HttpStatusCode.BAD_REQUEST,
-      status: 'error'
-    };
-
-    return response;
-  }
-
-  static badCredentials(message: string) {
-    const response = {
-      key: 'BAD_REQUEST',
-      code: HttpStatusCode.USER_BAD_CREDENTIALS,
-      error: message,
-      status: 'error'
-    };
-    return response;
-  }
-  static notFound(message: string) {
-    const response = {
-      key: 'NOT_FOUND',
-      error: message,
-      code: HttpStatusCode.NOT_FOUND,
-      status: 'error'
-    };
-
-    return response;
-  }
-
-  static forbidden(message: string, data?: unknown) {
-    const response = {
-      key: 'FORBIDDEN',
-      error: message,
-      code: HttpStatusCode.FORBBIDEN,
       status: 'error',
       data
     };
-
-    return response;
   }
 
-  static unauthorized(message: string) {
-    const response = {
-      key: 'UNAUTHORIZED',
-      error: message,
-      code: HttpStatusCode.UNAUTHORIZED,
-      status: 'error'
-    };
+  response = {
+    key: 'BAD_REQUEST',
+    error: message,
+    code: HttpStatusCode.BAD_REQUEST,
+    status: 'error'
+  };
 
-    return response;
-  }
+  return response;
+};
 
-  static deleted(message: string) {
-    const response = {
-      key: 'DELETED',
-      message,
-      code: HttpStatusCode.OK,
-      status: 'success'
-    };
+export const badCredentials = (message: string): HttpMessageResponse => {
+  const response = {
+    key: 'BAD_REQUEST',
+    code: HttpStatusCode.USER_BAD_CREDENTIALS,
+    error: message,
+    status: 'error'
+  };
+  return response;
+};
+export const notFound = (message: string): HttpMessageResponse => {
+  const response = {
+    key: 'NOT_FOUND',
+    error: message,
+    code: HttpStatusCode.NOT_FOUND,
+    status: 'error'
+  };
 
-    return response;
-  }
+  return response;
+};
 
-  static serverError(message: string) {
-    const response = {
-      key: 'SERVER_ERROR',
-      error: message,
-      code: HttpStatusCode.SERVER_ERROR,
-      status: 'error'
-    };
+export const forbidden = (message: string, data?: unknown): HttpMessageResponse => {
+  const response = {
+    key: 'FORBIDDEN',
+    error: message,
+    code: HttpStatusCode.FORBBIDEN,
+    status: 'error',
+    data
+  };
 
-    return response;
-  }
-}
+  return response;
+};
 
-export default APIResponse;
+export const unauthorized = (message: string): HttpMessageResponse => {
+  const response = {
+    key: 'UNAUTHORIZED',
+    error: message,
+    code: HttpStatusCode.UNAUTHORIZED,
+    status: 'error'
+  };
+
+  return response;
+};
+
+export const deleted = (message: string): HttpMessageResponse => {
+  const response = {
+    key: 'DELETED',
+    message,
+    code: HttpStatusCode.OK,
+    status: 'success'
+  };
+
+  return response;
+};
+
+export const serverError = (message: string): HttpMessageResponse => {
+  const response = {
+    key: 'SERVER_ERROR',
+    error: message,
+    code: HttpStatusCode.SERVER_ERROR,
+    status: 'error'
+  };
+
+  return response;
+};

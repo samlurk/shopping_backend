@@ -1,7 +1,7 @@
 import * as mongoDB from 'mongodb';
 import 'dotenv/config';
 
-export async function connectDB() {
+export async function connectDB(): Promise<void> {
   const client: mongoDB.MongoClient = new mongoDB.MongoClient(process.env.DB_CONN_STRING as string);
 
   await client.connect();

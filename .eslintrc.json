@@ -19,6 +19,8 @@
   "rules": {
     "prettier/prettier": "error",
     "no-loops/no-loops": 2,
-    "@typescript-eslint/no-misused-promises": false
+    "@typescript-eslint/no-misused-promises": 0,
+        "no-throw-literal": "off",
+            "@typescript-eslint/no-throw-literal": "off"
   }
 }

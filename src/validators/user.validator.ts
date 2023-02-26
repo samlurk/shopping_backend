@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import { check } from 'express-validator';
+import type { Request, Response, NextFunction } from 'express';
+import { check, param } from 'express-validator';
 import { validateResult } from '../helpers/validate.helper';
 
 export const validateCreate = [
@@ -29,8 +29,7 @@ export const validateCreate = [
     .matches(/^\+/)
     .withMessage('The phone number must begin with "+".'),
   check('role')
-    .exists()
-    .not()
+    .optional()
     .isEmpty()
     .withMessage('The role must not be empty')
     .isIn(['vendor', 'customer', 'admin'])
@@ -77,6 +76,19 @@ export const validateUpdate = [
     .withMessage('The role entered is not valid'),
   check('address').optional().not().isEmpty().withMessage('The address must not be empty'),
   check('avatar').optional().isURL().withMessage('The address must contain a valid URL'),
+  (req: Request, res: Response, next: NextFunction) => {
+    validateResult(req, res, next);
+  }
+];
+
+export const validateId = [
+  param('id')
+    .exists()
+    .not()
+    .isEmpty()
+    .withMessage('The Id must not be empty')
+    .isMongoId()
+    .withMessage("It's not an Id"),
   (req: Request, res: Response, next: NextFunction) => {
     validateResult(req, res, next);
   }

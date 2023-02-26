@@ -1,7 +1,7 @@
-import { WithId } from 'mongodb';
-import { Request } from 'express';
-import { Role } from '../enums/role.enum';
-import { JwtPayload } from 'jsonwebtoken';
+import type { WithId } from 'mongodb';
+import type { Request } from 'express';
+import type { Role } from '../enums/role.enum';
+import type { JwtPayload } from 'jsonwebtoken';
 
 export interface MetaData {
   lastLogin: Date;
