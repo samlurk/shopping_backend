@@ -3,9 +3,10 @@ import type { User } from '../interfaces/user.interface';
 import { badCredentials } from '../helpers/APIResponse.handle';
 import { verified } from '../helpers/bcrypt.handle';
 import { generateToken } from '../helpers/jwt.handle';
+import { type WithId, type Document, ObjectId } from 'mongodb';
 
 export class AuthService {
-  async loginUser({ email, password }: User): Promise<{ token: string }> {
+  async loginUser({ email, password }: User): Promise<string> {
     const user = (await collections.users?.findOne(
       { email },
       { projection: { _id: 1, email: 1, password: 1, role: 1 } }
@@ -13,8 +14,13 @@ export class AuthService {
     if (user == null) throw badCredentials('Incorrect email');
     if (!(await verified(password, user.password))) throw badCredentials('Incorrect password');
     await collections.users?.updateOne({ _id: user._id }, { $set: { metadata: { lastLogin: new Date() } } });
-    return {
-      token: await generateToken(user)
-    };
+    return await generateToken({ _id: user._id, role: user.role });
+  }
+
+  async cookieJwtDataComparison({
+    _id,
+    role
+  }: Pick<User, '_id' | 'role'>): Promise<WithId<Document> | null | undefined> {
+    return await collections.users?.findOne({ $and: [{ _id: new ObjectId(_id) }, { role }] });
   }
 }

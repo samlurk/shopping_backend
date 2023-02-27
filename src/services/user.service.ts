@@ -51,6 +51,8 @@ export class UserService {
   }
 
   async updateUser(id: string, user: User): Promise<UpdateResult> {
+    // pwd
+    if (user.password != null) user.password = await encrypt(user.password);
     const responseUser = await collections.users?.updateOne({ _id: new ObjectId(id) }, { $set: user });
     if (responseUser?.matchedCount === 0) throw notFound('User not found');
     if (responseUser?.matchedCount == null) throw serverError('Unexpected Error');
