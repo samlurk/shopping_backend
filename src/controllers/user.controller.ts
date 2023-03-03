@@ -40,7 +40,8 @@ export class UserController<T extends Request, U extends Response> {
   async updateOne({ params: { id }, body }: T, res: U): Promise<U> {
     try {
       const userService = new UserService();
-      const response = ok('User updated', await userService.updateUser(id, body));
+      await userService.updateUser(id, body);
+      const response = ok('User updated');
       return res.status(response.code).send(response);
     } catch (err) {
       const typedError = err as HttpMessageResponse;

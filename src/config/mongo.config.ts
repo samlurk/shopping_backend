@@ -8,13 +8,17 @@ export async function connectDB(): Promise<void> {
 
   const db: mongoDB.Db = client.db(process.env.DB_NAME);
 
-  const usersCollection: mongoDB.Collection = db.collection(process.env.USERS_COLLECTION_NAME as string);
+  collections.users = db.collection('users');
+  collections.products = db.collection('products');
+  collections.categories = db.collection('categories');
+  collections.subcategories = db.collection('subcategories');
 
-  collections.users = usersCollection;
-
-  console.log(
-    `Successfully connected to database: ${db.databaseName} and collection: ${usersCollection.collectionName}`
-  );
+  console.log(`Successfully connected to database: ${db.databaseName}`);
 }
 
-export const collections: { users?: mongoDB.Collection } = {};
+export const collections: {
+  users?: mongoDB.Collection;
+  products?: mongoDB.Collection;
+  categories?: mongoDB.Collection;
+  subcategories?: mongoDB.Collection;
+} = {};

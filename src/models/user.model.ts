@@ -9,10 +9,10 @@ export default class UserModel {
     private readonly password: string,
     private readonly role: string = 'customer',
     private readonly phone: string,
-    private readonly createAt?: Date,
-    private readonly metadata?: MetaData
+    private readonly createAt = new Date(),
+    private readonly metadata?: MetaData,
+    private readonly updateAt: Date | 'never' = 'never'
   ) {
-    this.createAt = new Date();
     this.metadata = {
       lastLogin: this.createAt,
       isBlocked: false,

@@ -7,9 +7,9 @@ import { forbidden, notFound, serverError } from '../helpers/APIResponse.handle'
 
 export class UserService {
   // Adding new entry
-  async addUser({ firstName, lastName, email, password, role, phone }: Omit<User, 'id'>): Promise<InsertOneResult> {
+  async addUser({ firstName, lastName, email, password, role, phone }: User): Promise<InsertOneResult> {
     // Verify if the email and phone entered exist in another registry.
-    const searchRequiredKeys = await this.getUserRequiredKeys({ email, phone });
+    const searchRequiredKeys = await this.checkUserUniqueKeys({ email, phone });
     if (searchRequiredKeys != null) {
       if (searchRequiredKeys.email === email) throw forbidden('The registered email already exists');
       throw forbidden('The registered phone already exists');
@@ -19,16 +19,16 @@ export class UserService {
     return (await collections.users?.insertOne(userModel)) as InsertOneResult;
   }
 
-  async getUserRequiredKeys({
+  async checkUserUniqueKeys({
     email,
     phone
-  }: Pick<User, 'phone' | 'email'>): Promise<Pick<User, '_id' | 'phone' | 'email'> | null> {
+  }: Pick<User, 'phone' | 'email'>): Promise<Pick<User, 'phone' | 'email'> | null> {
     return (await collections.users?.findOne(
       {
         $or: [{ email }, { phone }]
       },
-      { projection: { _id: 1, email: 1, phone: 1 } }
-    )) as Pick<User, '_id' | 'phone' | 'email'> | null;
+      { projection: { email: 1, phone: 1 } }
+    )) as Pick<User, 'phone' | 'email'> | null;
   }
 
   async getUsers(): Promise<User[]> {
@@ -51,8 +51,8 @@ export class UserService {
   }
 
   async updateUser(id: string, user: User): Promise<UpdateResult> {
-    // pwd
     if (user.password != null) user.password = await encrypt(user.password);
+    user.updateAt = new Date();
     const responseUser = await collections.users?.updateOne({ _id: new ObjectId(id) }, { $set: user });
     if (responseUser?.matchedCount === 0) throw notFound('User not found');
     if (responseUser?.matchedCount == null) throw serverError('Unexpected Error');

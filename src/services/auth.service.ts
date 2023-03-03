@@ -10,7 +10,7 @@ export class AuthService {
     const user = (await collections.users?.findOne(
       { email },
       { projection: { _id: 1, email: 1, password: 1, role: 1 } }
-    )) as Pick<User, '_id' | 'email' | 'password' | 'role'> | undefined;
+    )) as WithId<Pick<User, 'email' | 'password' | 'role'>> | undefined;
     if (user == null) throw badCredentials('Incorrect email');
     if (!(await verified(password, user.password))) throw badCredentials('Incorrect password');
     await collections.users?.updateOne({ _id: user._id }, { $set: { metadata: { lastLogin: new Date() } } });
@@ -20,7 +20,7 @@ export class AuthService {
   async cookieJwtDataComparison({
     _id,
     role
-  }: Pick<User, '_id' | 'role'>): Promise<WithId<Document> | null | undefined> {
+  }: WithId<Pick<User, 'role'>>): Promise<WithId<Document> | null | undefined> {
     return await collections.users?.findOne({ $and: [{ _id: new ObjectId(_id) }, { role }] });
   }
 }

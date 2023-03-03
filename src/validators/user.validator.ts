@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { check, param } from 'express-validator';
 import { validateResult } from '../helpers/validate.helper';
 
-export const validateCreate = [
+export const validateCreateUser = [
   check('firstName').exists().not().isEmpty().withMessage('The first name must not be empty'),
   check('lastName').exists().not().isEmpty().withMessage('The last name must not be empty'),
   check('email')
@@ -30,6 +30,7 @@ export const validateCreate = [
     .withMessage('The phone number must begin with "+".'),
   check('role')
     .optional()
+    .not()
     .isEmpty()
     .withMessage('The role must not be empty')
     .isIn(['vendor', 'customer', 'admin'])
@@ -41,7 +42,7 @@ export const validateCreate = [
   }
 ];
 
-export const validateUpdate = [
+export const validateUpdateUser = [
   check('firstName').optional().not().isEmpty().withMessage('The first name must not be empty'),
   check('lastName').optional().not().isEmpty().withMessage('The last name must not be empty'),
   check('email')
@@ -76,19 +77,6 @@ export const validateUpdate = [
     .withMessage('The role entered is not valid'),
   check('address').optional().not().isEmpty().withMessage('The address must not be empty'),
   check('avatar').optional().isURL().withMessage('The address must contain a valid URL'),
-  (req: Request, res: Response, next: NextFunction) => {
-    validateResult(req, res, next);
-  }
-];
-
-export const validateId = [
-  param('id')
-    .exists()
-    .not()
-    .isEmpty()
-    .withMessage('The Id must not be empty')
-    .isMongoId()
-    .withMessage("It's not an Id"),
   (req: Request, res: Response, next: NextFunction) => {
     validateResult(req, res, next);
   }
