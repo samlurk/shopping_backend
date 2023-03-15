@@ -22,3 +22,10 @@ export interface Product {
   createAt: Date;
   updateAt: Date | 'never';
 }
+
+export interface QueryProduct {
+  search?: object;
+  sort?: object;
+  page?: number;
+  limit?: number;
+}

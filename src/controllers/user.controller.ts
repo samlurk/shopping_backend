@@ -7,7 +7,8 @@ export class UserController<T extends Request, U extends Response> {
   async create({ body }: T, res: U): Promise<U> {
     try {
       const userService = new UserService();
-      const response = created('User created', await userService.addUser(body));
+      await userService.addUser(body);
+      const response = created('User created');
       return res.status(response.code).send(response);
     } catch (err) {
       const typedError = err as HttpMessageResponse;

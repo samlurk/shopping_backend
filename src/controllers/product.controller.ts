@@ -1,14 +1,16 @@
-import type { Response } from 'express';
+import type { Response, Request } from 'express';
 import type { ReqExtJwt } from '../interfaces/user.interface';
 import { ProductService } from '../services/product.service';
 import { created, ok, deleted } from '../helpers/APIResponse.handle';
 import type { HttpMessageResponse } from '../interfaces/httpMessageResponse.interface';
+import type { queryProduct } from '../interfaces/query.interface';
 
 export class ProductController<T extends ReqExtJwt, U extends Response> {
   async create({ body, user }: T, res: U): Promise<U> {
     try {
       const productService = new ProductService();
-      const response = created('Product created', await productService.addProduct(body, user?._id));
+      await productService.addProduct(body, user?._id);
+      const response = created('Product created');
       return res.status(response.code).send(response);
     } catch (err) {
       const typedError = err as HttpMessageResponse;
@@ -16,10 +18,10 @@ export class ProductController<T extends ReqExtJwt, U extends Response> {
     }
   }
 
-  async getAll({ user }: T, res: U): Promise<U> {
+  async getAll({ user, query }: Request<unknown, unknown, unknown, queryProduct> & ReqExtJwt, res: U): Promise<U> {
     try {
       const productService = new ProductService();
-      const response = ok('Products received', await productService.getProducts(user?._id));
+      const response = ok('Products received', await productService.getProducts(user?._id, query));
       return res.status(response.code).send(response);
     } catch (err) {
       const typedError = err as HttpMessageResponse;

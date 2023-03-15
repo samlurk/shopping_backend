@@ -32,7 +32,10 @@ export class UserService {
   }
 
   async getUsers(): Promise<User[]> {
-    const responseUser = (await collections.users?.find({}).toArray()) as User[] | undefined;
+    const responseUser = collections.users
+      ?.find({})
+      .map((doc) => doc)
+      .toArray() as User[] | undefined;
     if (responseUser == null) throw notFound('No user registered');
     return responseUser;
   }

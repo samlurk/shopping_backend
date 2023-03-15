@@ -3,6 +3,9 @@ import { type DeleteResult, ObjectId, type InsertOneResult, type UpdateResult } 
 import { forbidden, notFound, serverError } from '../helpers/APIResponse.handle';
 import ProductModel from '../models/product.model';
 import type { Product } from '../interfaces/product.interface';
+import type { queryProduct } from '../interfaces/query.interface';
+import { sortQueryProduct } from '../helpers/queryProduct.handle';
+import { Query } from '../enums/query.enum';
 
 export class ProductService {
   async addProduct(
@@ -34,25 +37,37 @@ export class ProductService {
     return (await collections.products?.findOne({ slug }, { projection: { slug: 1 } })) as Pick<Product, 'slug'> | null;
   }
 
-  async getProducts(vendorId: string): Promise<Product[] | undefined> {
-    const responseProduct = (await collections.products
-      ?.aggregate([
-        {
-          $match: {
-            createBy: new ObjectId(vendorId)
-          }
-        },
-        {
-          $lookup: {
-            from: 'categories',
-            localField: 'category._id',
-            foreignField: '_id',
-            as: 'category'
-          }
-        },
-        { $unwind: '$category' }
-      ])
-      .toArray()) as Product[] | undefined;
+  async getProducts(vendorId: string, reqQuery: queryProduct): Promise<Product[] | undefined> {
+    // Filtering
+    const queryStr = JSON.stringify(reqQuery)
+      .replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`)
+      .replace(/\W\d+\W/gm, (match) => match.slice(1, match.length - 1));
+
+    const queryObject: queryProduct = JSON.parse(queryStr);
+    Object.keys(queryObject).forEach((key: string) => {
+      if (key === Query.Page || key === Query.Sort || key === Query.Limit) delete queryObject[key];
+    });
+
+    // Sorting
+    const queryProduct = collections.products?.aggregate([
+      { $sort: sortQueryProduct(reqQuery.sort) },
+      {
+        $match: {
+          $and: [queryObject, { createBy: new ObjectId(vendorId) }]
+        }
+      },
+      {
+        $lookup: {
+          from: 'categories',
+          localField: 'category._id',
+          foreignField: '_id',
+          as: 'category'
+        }
+      },
+      { $unwind: '$category' }
+    ]);
+
+    const responseProduct = (await queryProduct?.toArray()) as Product[] | undefined;
     if (responseProduct == null) throw notFound('No product registered');
     return responseProduct;
   }
