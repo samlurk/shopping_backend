@@ -3,8 +3,8 @@ import { type DeleteResult, ObjectId, type InsertOneResult, type UpdateResult } 
 import { forbidden, notFound, serverError } from '../helpers/APIResponse.handle';
 import ProductModel from '../models/product.model';
 import type { Product } from '../interfaces/product.interface';
-import type { queryProduct } from '../interfaces/query.interface';
-import { sortQueryProduct } from '../helpers/queryProduct.handle';
+import type { queryPagination, reqQueryProduct } from '../interfaces/query.interface';
+import { limitQueryFields, sortQueryProduct } from '../helpers/query.handle';
 import { Query } from '../enums/query.enum';
 
 export class ProductService {
@@ -37,20 +37,36 @@ export class ProductService {
     return (await collections.products?.findOne({ slug }, { projection: { slug: 1 } })) as Pick<Product, 'slug'> | null;
   }
 
-  async getProducts(vendorId: string, reqQuery: queryProduct): Promise<Product[] | undefined> {
-    // Filtering
+  async getProducts(vendorId: string, reqQuery: reqQueryProduct): Promise<Product[] | undefined> {
+    //* Filtering
     const queryStr = JSON.stringify(reqQuery)
       .replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`)
       .replace(/\W\d+\W/gm, (match) => match.slice(1, match.length - 1));
 
-    const queryObject: queryProduct = JSON.parse(queryStr);
+    //* Sorting
+    const queryObject: reqQueryProduct = JSON.parse(queryStr);
     Object.keys(queryObject).forEach((key: string) => {
-      if (key === Query.Page || key === Query.Sort || key === Query.Limit) delete queryObject[key];
+      if (key === Query.Page || key === Query.Sort || key === Query.Limit || key === Query.Fields)
+        delete queryObject[key];
     });
 
-    // Sorting
+    //* Limiting the fields && Pagination
+    let pagination: queryPagination = { limit: 10, skip: 0 };
+    if (typeof reqQuery.page === 'string' && typeof reqQuery.limit === 'string') {
+      if (!Number.isNaN(reqQuery.limit) && !Number.isNaN(reqQuery.page)) {
+        const page = parseInt(reqQuery.page);
+        const limit = parseInt(reqQuery.limit);
+        pagination = { limit, skip: (page - 1) * limit };
+        const totalProductCount = await collections.products?.countDocuments();
+        if (typeof totalProductCount === 'undefined') throw notFound('No product registered');
+        if (pagination.skip >= totalProductCount) throw notFound("This page doesn't exists");
+      }
+    }
+
     const queryProduct = collections.products?.aggregate([
       { $sort: sortQueryProduct(reqQuery.sort) },
+      { $skip: pagination.skip },
+      { $limit: pagination.limit },
       {
         $match: {
           $and: [queryObject, { createBy: new ObjectId(vendorId) }]
@@ -64,7 +80,8 @@ export class ProductService {
           as: 'category'
         }
       },
-      { $unwind: '$category' }
+      { $unwind: '$category' },
+      { $project: limitQueryFields(reqQuery.fields) }
     ]);
 
     const responseProduct = (await queryProduct?.toArray()) as Product[] | undefined;
