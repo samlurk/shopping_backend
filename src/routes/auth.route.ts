@@ -2,7 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import { UserController } from '../controllers/user.controller';
 import { AuthController } from '../controllers/auth.controller';
 import { validateCreateUser } from '../validators/user.validator';
-import { checkCookieJwt } from '../middlewares/auth.middleware';
+import { authSessionMiddleware } from '../middlewares/auth.middleware';
 
 const router = Router();
 
@@ -11,6 +11,6 @@ const { login, logout } = new AuthController<Request, Response>();
 
 router.post('/register', validateCreateUser, create);
 router.post('/login', login);
-router.get('/logout', checkCookieJwt, logout);
+router.get('/logout', authSessionMiddleware, logout);
 
 export { router };

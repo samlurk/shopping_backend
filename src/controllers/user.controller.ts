@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import { UserService } from '../services/user.service';
 import { created, ok, deleted } from '../helpers/APIResponse.handle';
 import type { HttpMessageResponse } from '../interfaces/httpMessageResponse.interface';
+import type { ReqExtJwt } from '../interfaces/user.interface';
 
 export class UserController<T extends Request, U extends Response> {
   async create({ body }: T, res: U): Promise<U> {
@@ -30,7 +31,7 @@ export class UserController<T extends Request, U extends Response> {
   async getOne({ params: { id } }: T, res: U): Promise<U> {
     try {
       const userService = new UserService();
-      const response = ok('User received', await userService.getUser(id));
+      const response = ok('User received', await userService.getUserById(id));
       return res.status(response.code).send(response);
     } catch (err) {
       const typedError = err as HttpMessageResponse;
@@ -79,6 +80,42 @@ export class UserController<T extends Request, U extends Response> {
       const userService = new UserService();
       await userService.blockOrUnlockUser(id, false);
       const response = ok('User unblocked');
+      return res.status(response.code).send(response);
+    } catch (err) {
+      const typedError = err as HttpMessageResponse;
+      return res.status(typedError.code).send(typedError);
+    }
+  }
+
+  async updatePassword({ user, body: { password, oldPassword } }: ReqExtJwt, res: U): Promise<U> {
+    try {
+      const userService = new UserService();
+      await userService.updateUserPassword(user?._id, password, oldPassword);
+      const response = ok('User password updated');
+      return res.status(response.code).send(response);
+    } catch (err) {
+      const typedError = err as HttpMessageResponse;
+      return res.status(typedError.code).send(typedError);
+    }
+  }
+
+  async forgotPassword({ body: { email } }: T, res: U): Promise<U> {
+    try {
+      const userService = new UserService();
+      await userService.forgotUserPassword(email);
+      const response = ok('Reset password email has been sent to your email successfully');
+      return res.status(response.code).send(response);
+    } catch (err) {
+      const typedError = err as HttpMessageResponse;
+      return res.status(typedError.code).send(typedError);
+    }
+  }
+
+  async resetPassword({ params: { token }, body: { password } }: T, res: U): Promise<U> {
+    try {
+      const userService = new UserService();
+      await userService.resetUserPassword(token, password);
+      const response = ok('Password successfully reset');
       return res.status(response.code).send(response);
     } catch (err) {
       const typedError = err as HttpMessageResponse;
