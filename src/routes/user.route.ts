@@ -14,7 +14,7 @@ const router = Router();
 const {
   getAll,
   getOne,
-  create,
+  createOne,
   updateOne,
   deleteOne,
   blockUser,
@@ -26,7 +26,7 @@ const {
 
 router.get('/all-users', authSessionMiddleware, authRoleMiddleware(Role.Admin), getAll);
 router.get('/:id', authSessionMiddleware, authRoleMiddleware(Role.Admin), validateId, getOne);
-router.post('/', authSessionMiddleware, authRoleMiddleware(Role.Admin), validateCreateUser, create);
+router.post('/', authSessionMiddleware, authRoleMiddleware(Role.Admin), validateCreateUser, createOne);
 router.put(
   '/edit-user/:id',
   authSessionMiddleware,

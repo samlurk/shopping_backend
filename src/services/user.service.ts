@@ -3,7 +3,7 @@ import type { User } from '../interfaces/user.interface';
 import { encrypt, verified } from '../helpers/bcrypt.handle';
 import UserModel from '../models/user.model';
 import { ObjectId } from 'mongodb';
-import { forbidden, notFound, unauthorized } from '../helpers/APIResponse.handle';
+import { forbidden, notFound } from '../helpers/APIResponse.handle';
 import EmailService from '../services/email.service';
 import { generateToken, verifyToken } from '../helpers/jwt.handle';
 import { randomBytes } from 'crypto';
@@ -39,7 +39,7 @@ export class UserService {
       ?.find({})
       .map((doc) => doc)
       .toArray() as User[] | undefined;
-    if (responseUser == null) throw notFound('No user registered');
+    if (responseUser == null) throw notFound('No users registered');
     return responseUser;
   }
 

@@ -10,8 +10,11 @@ export async function connectDB(): Promise<void> {
 
   collections.users = db.collection('users');
   collections.products = db.collection('products');
-  collections.categories = db.collection('categories');
-  collections.subcategories = db.collection('subcategories');
+  collections.productCategories = db.collection('product_categories');
+  collections.productSubcategories = db.collection('product_subcategories');
+  collections.posts = db.collection('posts');
+  collections.postCategories = db.collection('post_categories');
+  collections.postSubcategories = db.collection('post_subcategories');
 
   console.log(`Successfully connected to database: ${db.databaseName}`);
 }
@@ -19,6 +22,9 @@ export async function connectDB(): Promise<void> {
 export const collections: {
   users?: mongoDB.Collection;
   products?: mongoDB.Collection;
-  categories?: mongoDB.Collection;
-  subcategories?: mongoDB.Collection;
+  productCategories?: mongoDB.Collection;
+  productSubcategories?: mongoDB.Collection;
+  posts?: mongoDB.Collection;
+  postCategories?: mongoDB.Collection;
+  postSubcategories?: mongoDB.Collection;
 } = {};

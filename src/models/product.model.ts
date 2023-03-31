@@ -1,6 +1,5 @@
-import type { ObjectId } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import type { Ratings } from '../interfaces/product.interface';
-import type { Category } from '../interfaces/category.interface';
 
 // Declare the Schema of the Mongo model
 export default class ProductModel {
@@ -9,7 +8,7 @@ export default class ProductModel {
     private readonly description: string,
     private readonly price: number,
     private readonly slug: string,
-    private readonly category?: Category,
+    private readonly category = { _id: new ObjectId('642381fe167de3293d9f2c5c') },
     private readonly brand?: string,
     private readonly quantity?: number,
     private readonly sold: number = 0,

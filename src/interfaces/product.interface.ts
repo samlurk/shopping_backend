@@ -1,6 +1,6 @@
 import type { Color } from '../enums/product.enum';
 import type { ObjectId } from 'mongodb';
-import type { Category } from './category.interface';
+import type { Category } from './category.subcategory.interface';
 
 export interface Ratings {
   star: number;
@@ -21,11 +21,4 @@ export interface Product {
   createBy: ObjectId;
   createAt: Date;
   updateAt: Date | 'never';
-}
-
-export interface QueryProduct {
-  search?: object;
-  sort?: object;
-  page?: number;
-  limit?: number;
 }

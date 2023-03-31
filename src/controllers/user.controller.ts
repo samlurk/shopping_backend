@@ -5,7 +5,7 @@ import type { HttpMessageResponse } from '../interfaces/httpMessageResponse.inte
 import type { ReqExtJwt } from '../interfaces/user.interface';
 
 export class UserController<T extends Request, U extends Response> {
-  async create({ body }: T, res: U): Promise<U> {
+  async createOne({ body }: T, res: U): Promise<U> {
     try {
       const userService = new UserService();
       await userService.addUser(body);

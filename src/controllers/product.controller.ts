@@ -6,7 +6,7 @@ import type { HttpMessageResponse } from '../interfaces/httpMessageResponse.inte
 import type { reqQueryProduct } from '../interfaces/query.interface';
 
 export class ProductController<T extends ReqExtJwt, U extends Response> {
-  async create({ body, user }: T, res: U): Promise<U> {
+  async createOne({ body, user }: T, res: U): Promise<U> {
     try {
       const productService = new ProductService();
       await productService.addProduct(body, user?._id);

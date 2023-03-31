@@ -6,11 +6,11 @@ import { validateId } from '../validators/param.validator';
 import { validateCreateProduct, validateUpdateProduct } from '../validators/product.validator';
 
 const router = Router();
-const { getAll, create, getOne, deleteOne, updateOne } = new ProductController();
+const { getAll, createOne, getOne, deleteOne, updateOne } = new ProductController();
 
 router.get('/all-products', authSessionMiddleware, authRoleMiddleware(Role.Admin), getAll);
 router.get('/:id', authSessionMiddleware, authRoleMiddleware(Role.Admin), validateId, getOne);
-router.post('/', authSessionMiddleware, authRoleMiddleware(Role.Admin), validateCreateProduct, create);
+router.post('/', authSessionMiddleware, authRoleMiddleware(Role.Admin), validateCreateProduct, createOne);
 router.put(
   '/edit-product/:id',
   authSessionMiddleware,

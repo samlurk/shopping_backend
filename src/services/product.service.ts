@@ -11,7 +11,7 @@ export class ProductService {
   async addProduct(
     { title, description, price, slug, category, brand, quantity, sold, images, color, ratings, createBy }: Product,
     vendorId: string
-  ): Promise<InsertOneResult> {
+  ): Promise<void> {
     const searchRequiredKeys = await this.checkProductUniqueKeys({ slug });
     if (searchRequiredKeys != null && searchRequiredKeys.slug === slug)
       throw forbidden('The registered slug already exists');
@@ -30,7 +30,7 @@ export class ProductService {
       ratings,
       createBy
     );
-    return (await collections.products?.insertOne(productModel)) as InsertOneResult;
+    await collections.products?.insertOne(productModel);
   }
 
   async checkProductUniqueKeys({ slug }: Pick<Product, 'slug'>): Promise<Pick<Product, 'slug'> | null> {
@@ -112,23 +112,19 @@ export class ProductService {
     return responseProduct;
   }
 
-  async deleteProduct(productId: string, vendorId: string): Promise<DeleteResult> {
+  async deleteProduct(productId: string, vendorId: string): Promise<void> {
     const responseProduct = await collections.products?.deleteOne({
       $and: [{ _id: new ObjectId(productId) }, { createBy: new ObjectId(vendorId) }]
     });
     if (responseProduct?.deletedCount === 0) throw notFound('Product not found');
-    if (responseProduct?.deletedCount == null) throw serverError('Unexpected Error');
-    return responseProduct;
   }
 
-  async updateProduct(productId: string, product: Product, vendorId: string): Promise<UpdateResult> {
+  async updateProduct(productId: string, product: Product, vendorId: string): Promise<void> {
     product.updateAt = new Date();
     const responseProduct = await collections.products?.updateOne(
       { $and: [{ _id: new ObjectId(productId) }, { createBy: new ObjectId(vendorId) }] },
       { $set: product }
     );
     if (responseProduct?.matchedCount === 0) throw notFound('Product not found');
-    if (responseProduct?.matchedCount == null) throw serverError('Unexpected Error');
-    return responseProduct;
   }
 }

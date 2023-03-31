@@ -76,7 +76,7 @@ export const validateUpdateUser = [
     .isIn(['vendor', 'customer', 'admin'])
     .withMessage('The role entered is not valid'),
   body('address').optional().not().isEmpty().withMessage('The address must not be empty'),
-  body('avatar').optional().isURL().withMessage('The address must contain a valid URL'),
+  body('avatar').optional().isURL().withMessage('The avatar must contain a valid URL'),
   (req: Request, res: Response, next: NextFunction) => {
     validateResult(req, res, next);
   }
