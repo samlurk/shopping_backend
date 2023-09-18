@@ -1,5 +1,7 @@
 import * as mongoDB from 'mongodb';
 import 'dotenv/config';
+import type CategoryModel from '../models/category.model';
+import type PostModel from '../models/post.model';
 
 export async function connectDB(): Promise<void> {
   const client: mongoDB.MongoClient = new mongoDB.MongoClient(process.env.DB_CONN_STRING as string);
@@ -10,11 +12,8 @@ export async function connectDB(): Promise<void> {
 
   collections.users = db.collection('users');
   collections.products = db.collection('products');
-  collections.productCategories = db.collection('product_categories');
-  collections.productSubcategories = db.collection('product_subcategories');
   collections.posts = db.collection('posts');
-  collections.postCategories = db.collection('post_categories');
-  collections.postSubcategories = db.collection('post_subcategories');
+  collections.categories = db.collection('categories');
 
   console.log(`Successfully connected to database: ${db.databaseName}`);
 }
@@ -22,9 +21,6 @@ export async function connectDB(): Promise<void> {
 export const collections: {
   users?: mongoDB.Collection;
   products?: mongoDB.Collection;
-  productCategories?: mongoDB.Collection;
-  productSubcategories?: mongoDB.Collection;
-  posts?: mongoDB.Collection;
-  postCategories?: mongoDB.Collection;
-  postSubcategories?: mongoDB.Collection;
+  posts?: mongoDB.Collection<PostModel>;
+  categories?: mongoDB.Collection<CategoryModel>;
 } = {};

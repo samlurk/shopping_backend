@@ -1,10 +1,11 @@
-export interface reqQueryProduct {
-  page?: string;
-  sort?: string;
-  limit?: string;
-  fields?: string;
+export interface ReqQuery {
+  page: number;
+  sort: string;
+  limit: number;
+  fields: string;
 }
-export interface queryPagination {
+
+export interface ReqQueryPagination {
   limit: number;
   skip: number;
 }

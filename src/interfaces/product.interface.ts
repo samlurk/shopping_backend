@@ -1,6 +1,6 @@
 import type { Color } from '../enums/product.enum';
 import type { ObjectId } from 'mongodb';
-import type { Category } from './category.subcategory.interface';
+import type { CreateCategoryDto } from './category.interface';
 
 export interface Ratings {
   star: number;
@@ -11,7 +11,6 @@ export interface Product {
   description: string;
   price: number;
   slug: string;
-  category?: Category;
   brand?: string;
   quantity?: number;
   sold?: number;

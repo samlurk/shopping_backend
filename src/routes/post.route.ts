@@ -6,7 +6,7 @@ import { validateId } from '../validators/param.validator';
 import { validateCreatePost, validateUpdatePost, validatePostId } from '../validators/post.validator';
 
 const router = Router();
-const { createOne, getAll, getOne, updateOne, deleteOne, likePost, dislikePost } = new PostController();
+const { createOne, getAll, getOne, updateOne, deleteOne } = new PostController();
 
 router.post('/', authSessionMiddleware, authRoleMiddleware(Role.Admin), validateCreatePost, createOne);
 
@@ -22,6 +22,6 @@ router.put(
 );
 router.delete('/:id', authSessionMiddleware, authRoleMiddleware(Role.Admin), validateId, deleteOne);
 
-router.put('/like', authSessionMiddleware, authRoleMiddleware(Role.Admin), validatePostId, likePost);
-router.put('/dislike', authSessionMiddleware, authRoleMiddleware(Role.Admin), validatePostId, dislikePost);
+// router.put('/like', authSessionMiddleware, authRoleMiddleware(Role.Admin), validatePostId, likePost);
+// router.put('/dislike', authSessionMiddleware, authRoleMiddleware(Role.Admin), validatePostId, dislikePost);
 export { router };

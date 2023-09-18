@@ -1,9 +1,49 @@
-export const sortQueryProduct = (query: string | undefined): object => {
-  //* Sorting
-  if (typeof query === 'string') {
+import type { MongodbOPerators } from '../interfaces/mongodb.interface';
+import type { ReqQuery, ReqQueryPagination } from '../interfaces/query.interface';
+
+export const handleReqQuery = (reqQuery: Partial<ReqQuery>): MongodbOPerators => {
+  //* Changing the data type of the comparison query operators value
+  const queryStr = JSON.stringify(reqQuery)
+    .replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`)
+    .replace(/\W\d+\W/gm, (match) => match.slice(1, match.length - 1));
+
+  const {
+    fields: reqFields,
+    limit: reqLimit,
+    page: reqPage,
+    sort: reqSort,
+    ...queryToMatch
+  }: ReqQuery = JSON.parse(queryStr);
+
+  const { limit, skip } = queryPagination(reqLimit, reqPage);
+  const sort = sortingQueryByFields(reqSort);
+  const fields = limitingQueryByFields(reqFields);
+
+  return {
+    limit,
+    skip,
+    match: queryToMatch,
+    project: fields,
+    sort
+  };
+};
+
+//* Pagination
+const queryPagination = (reqLimit: number | undefined, reqPage: number | undefined): ReqQueryPagination => {
+  const pagination: ReqQueryPagination = { limit: 10, skip: 0 };
+
+  pagination.limit = typeof reqLimit === 'number' ? reqLimit : pagination.limit;
+  pagination.skip = typeof reqPage === 'number' ? (reqPage - 1) * pagination.limit : pagination.skip;
+
+  return pagination;
+};
+
+//* Sorting
+export const sortingQueryByFields = (reqSort: string | undefined): object => {
+  if (typeof reqSort === 'string') {
     let sort = {};
     let operator = -1;
-    query.split(',').forEach((field) => {
+    reqSort.split(',').forEach((field) => {
       if (field.search(/^[a-zA-Z]+$/g) !== -1) {
         operator = 1;
       }
@@ -17,11 +57,11 @@ export const sortQueryProduct = (query: string | undefined): object => {
   return { createAt: -1 };
 };
 
-//* Limiting the fields
-export const limitQueryFields = (query: string | undefined): object => {
-  if (typeof query === 'string') {
+//* Limiting fields
+export const limitingQueryByFields = (reqFields: string | undefined): object => {
+  if (typeof reqFields === 'string') {
     let limitFields = {};
-    query.split(',').forEach((field) => {
+    reqFields.split(',').forEach((field) => {
       limitFields = { ...limitFields, ...JSON.parse(`{"${field}": 1}`) };
     });
     return limitFields;

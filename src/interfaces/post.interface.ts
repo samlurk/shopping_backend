@@ -1,23 +1,6 @@
-import type { ObjectId } from 'mongodb';
-import type { Category } from './category.subcategory.interface';
-
-export interface Post {
+export interface CreatePostDto {
   title: string;
   description: string;
-  category: Category;
-  image: string;
-  likes: PostLikes;
-  dislikes: PostDislikes;
-  numViews: number;
-  createAt: Date;
-  updateAt: Date | 'never';
-}
-
-export interface PostLikes {
-  active: false;
-  likesBy: ObjectId[];
-}
-export interface PostDislikes {
-  active: false;
-  dislikesBy: ObjectId[];
+  category: { Id: string };
+  image: string | null;
 }

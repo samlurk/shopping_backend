@@ -1,16 +1,31 @@
-import { ObjectId } from 'mongodb';
+import { ObjectId, type WithId } from 'mongodb';
+import type { CreatePostDto } from '../interfaces/post.interface';
+import type CategoryModel from './category.model';
 
 export default class PostModel {
-  constructor(
-    private readonly title: string,
-    private readonly description: string,
-    private readonly category = { _id: new ObjectId('642381fe167de3293d9f2c5c') },
-    private readonly image = 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80',
-    private readonly likes = { active: false },
-    private readonly dislikes = { active: false },
-    private readonly author = 'admin',
-    private readonly numViews = 0,
-    private readonly createAt = new Date(),
-    private readonly updateAt: Date | 'never' = 'never'
-  ) {}
+  title: string;
+  description: string;
+  category: Partial<WithId<CategoryModel>>;
+  image: string | null;
+  interactions: boolean;
+  likes: ObjectId[];
+  dislikes: ObjectId[];
+  author: string;
+  numViews: number;
+  createAt: Date;
+  updateAt: Date;
+
+  constructor({ title, description, category: { Id }, image = null }: CreatePostDto) {
+    this.title = title;
+    this.description = description;
+    this.category = { _id: new ObjectId(Id) };
+    this.image = image;
+    this.interactions = false;
+    this.likes = [];
+    this.dislikes = [];
+    this.author = 'admin';
+    this.numViews = 0;
+    this.createAt = new Date();
+    this.updateAt = new Date();
+  }
 }

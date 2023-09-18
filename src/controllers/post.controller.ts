@@ -63,27 +63,27 @@ export class PostController<T extends Request, U extends Response> {
     }
   }
 
-  async likePost({ body: { postId }, user }: ReqExtJwt, res: U): Promise<U> {
-    try {
-      const postService = new PostService();
-      const messageResponse = await postService.likePost(postId, user?._id);
-      const response = ok(messageResponse);
-      return res.status(response.code).send(response);
-    } catch (err) {
-      const typedError = err as HttpMessageResponse;
-      return res.status(typedError.code).send(typedError);
-    }
-  }
+  // async likePost({ body: { postId }, user }: ReqExtJwt, res: U): Promise<U> {
+  //   try {
+  //     const postService = new PostService();
+  //     const messageResponse = await postService.likePost(postId, user?._id);
+  //     const response = ok(messageResponse);
+  //     return res.status(response.code).send(response);
+  //   } catch (err) {
+  //     const typedError = err as HttpMessageResponse;
+  //     return res.status(typedError.code).send(typedError);
+  //   }
+  // }
 
-  async dislikePost({ body: { postId }, user }: ReqExtJwt, res: U): Promise<U> {
-    try {
-      const postService = new PostService();
-      const messageResponse = await postService.dislikePost(postId, user?._id);
-      const response = ok(messageResponse);
-      return res.status(response.code).send(response);
-    } catch (err) {
-      const typedError = err as HttpMessageResponse;
-      return res.status(typedError.code).send(typedError);
-    }
-  }
+  // async dislikePost({ body: { postId }, user }: ReqExtJwt, res: U): Promise<U> {
+  //   try {
+  //     const postService = new PostService();
+  //     const messageResponse = await postService.dislikePost(postId, user?._id);
+  //     const response = ok(messageResponse);
+  //     return res.status(response.code).send(response);
+  //   } catch (err) {
+  //     const typedError = err as HttpMessageResponse;
+  //     return res.status(typedError.code).send(typedError);
+  //   }
+  // }
 }
