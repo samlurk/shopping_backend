@@ -1,4 +1,4 @@
-export interface ReqQuery {
+export interface ReqQueryDto {
   page: number;
   sort: string;
   limit: number;

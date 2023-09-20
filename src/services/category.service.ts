@@ -3,6 +3,8 @@ import { collections } from '../config/mongo.config';
 import { notFound } from '../helpers/APIResponse.handle';
 import type { CreateCategoryDto } from '../interfaces/category.interface';
 import CategoryModel from '../models/category.model';
+import { handleReqQuery } from '../helpers/query.handle';
+import type { ReqQueryDto } from '../interfaces/query.interface';
 
 export default class CategoryService {
   async createOneCategory(createCategoryDto: CreateCategoryDto): Promise<void> {
@@ -10,20 +12,32 @@ export default class CategoryService {
     await collections.categories?.insertOne(categoryModel);
   }
 
-  async getOneCategory(categoryId: string): Promise<CategoryModel> {
-    const responseCategory = await collections.categories?.findOne({ _id: new ObjectId(categoryId) });
-    if (responseCategory === undefined || responseCategory === null) throw notFound('category/category-not-found');
-    return responseCategory;
+  async getOneCategory(categoryId: string, reqQuery: ReqQueryDto): Promise<CategoryModel> {
+    const { project } = handleReqQuery(reqQuery);
+    const responseCategory = await collections.categories
+      ?.aggregate<CategoryModel>([{ $match: { _id: new ObjectId(categoryId) } }, { $project: project }])
+      .toArray();
+    if (responseCategory === undefined || responseCategory.length === 0) throw notFound('category/category-not-found');
+    const [category] = responseCategory;
+    return category;
   }
 
-  async getAllCategories(): Promise<CategoryModel[]> {
-    const responseCategory = collections.categories
-      ?.find({})
-      .map((doc) => doc)
+  async getAllCategories(reqQuery: ReqQueryDto): Promise<CategoryModel[]> {
+    const { skip, limit, match, project, sort } = handleReqQuery(reqQuery);
+
+    const responseCategory = await collections.categories
+      ?.aggregate<CategoryModel>([
+        { $sort: sort },
+        { $skip: skip },
+        { $limit: limit },
+        { $match: match },
+        { $project: project }
+      ])
       .toArray();
-    if (responseCategory === undefined || (await responseCategory).length === 0)
+
+    if (responseCategory === undefined || responseCategory.length === 0)
       throw notFound('category/all-categories/no-categories-found');
-    return await responseCategory;
+    return responseCategory;
   }
 
   async updateOneCategory(categoryId: string, updateCategory: Partial<CreateCategoryDto>): Promise<void> {

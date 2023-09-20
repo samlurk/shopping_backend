@@ -4,6 +4,7 @@ import type { HttpMessageResponse } from '../interfaces/httpMessageResponse.inte
 import CategoryService from '../services/category.service';
 import type { CreateCategoryDto } from '../interfaces/category.interface';
 import type { ParamsDictionary } from 'express-serve-static-core';
+import type { ReqQueryDto } from '../interfaces/query.interface';
 
 export default class CategoryController {
   async createOneCategory({ body }: Request<unknown, unknown, CreateCategoryDto>, res: Response): Promise<Response> {
@@ -22,10 +23,13 @@ export default class CategoryController {
     }
   }
 
-  async getAllCategories(_: Request, res: Response): Promise<Response> {
+  async getAllCategories(
+    { query }: Request<unknown, unknown, unknown, ReqQueryDto & qs.ParsedQs>,
+    res: Response
+  ): Promise<Response> {
     try {
       const categoryService = new CategoryService();
-      const response = ok('Categories received', await categoryService.getAllCategories());
+      const response = ok('Categories received', await categoryService.getAllCategories(query));
       return res.status(response.code).send(response);
     } catch (err) {
       let typedError: HttpMessageResponse;
@@ -37,10 +41,13 @@ export default class CategoryController {
     }
   }
 
-  async getOneCategory({ params: { id } }: Request, res: Response): Promise<Response> {
+  async getOneCategory(
+    { params: { id }, query }: Request<ParamsDictionary, unknown, unknown, ReqQueryDto & qs.ParsedQs>,
+    res: Response
+  ): Promise<Response> {
     try {
       const categoryService = new CategoryService();
-      const response = ok('Category received', await categoryService.getOneCategory(id));
+      const response = ok('Category received', await categoryService.getOneCategory(id, query));
       return res.status(response.code).send(response);
     } catch (err) {
       let typedError: HttpMessageResponse;

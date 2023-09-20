@@ -1,7 +1,7 @@
 import type { MongodbOPerators } from '../interfaces/mongodb.interface';
-import type { ReqQuery, ReqQueryPagination } from '../interfaces/query.interface';
+import type { ReqQueryDto, ReqQueryPagination } from '../interfaces/query.interface';
 
-export const handleReqQuery = (reqQuery: Partial<ReqQuery>): MongodbOPerators => {
+export const handleReqQuery = (reqQuery: Partial<ReqQueryDto>): MongodbOPerators => {
   //* Changing the data type of the comparison query operators value
   const queryStr = JSON.stringify(reqQuery)
     .replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`)
@@ -13,7 +13,7 @@ export const handleReqQuery = (reqQuery: Partial<ReqQuery>): MongodbOPerators =>
     page: reqPage,
     sort: reqSort,
     ...queryToMatch
-  }: ReqQuery = JSON.parse(queryStr);
+  }: ReqQueryDto = JSON.parse(queryStr);
 
   const { limit, skip } = queryPagination(reqLimit, reqPage);
   const sort = sortingQueryByFields(reqSort);
@@ -66,5 +66,5 @@ export const limitingQueryByFields = (reqFields: string | undefined): object => 
     });
     return limitFields;
   }
-  return { showAllProperties: 0 }; // TODO: Refactor this
+  return { showAllProperties: 0 };
 };

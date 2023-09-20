@@ -3,7 +3,7 @@ import { type DeleteResult, ObjectId, type InsertOneResult, type UpdateResult } 
 import { forbidden, notFound, serverError } from '../helpers/APIResponse.handle';
 import ProductModel from '../models/product.model';
 import type { Product } from '../interfaces/product.interface';
-import type { ReqQueryPagination, ReqQuery } from '../interfaces/query.interface';
+import type { ReqQueryPagination, ReqQueryDto } from '../interfaces/query.interface';
 import { handleReqQuery, limitingQueryByFields, sortingQueryByFields } from '../helpers/query.handle';
 import { Query } from '../enums/query.enum';
 
@@ -36,7 +36,7 @@ export class ProductService {
     return (await collections.products?.findOne({ slug }, { projection: { slug: 1 } })) as Pick<Product, 'slug'> | null;
   }
 
-  async getProducts(vendorId: string, reqQuery: ReqQuery): Promise<Product[] | undefined> {
+  async getProducts(vendorId: string, reqQuery: ReqQueryDto): Promise<Product[] | undefined> {
     const { skip, limit, match, project, sort } = handleReqQuery(reqQuery);
     const totalCount = await collections.products?.countDocuments();
     if (typeof totalCount === 'number' && skip >= totalCount) throw notFound('product/page-not-found');
