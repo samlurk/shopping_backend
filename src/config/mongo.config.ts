@@ -2,6 +2,7 @@ import * as mongoDB from 'mongodb';
 import 'dotenv/config';
 import type CategoryModel from '../models/category.model';
 import type PostModel from '../models/post.model';
+import type UserModel from '../models/user.model';
 
 export async function connectDB(): Promise<void> {
   const client: mongoDB.MongoClient = new mongoDB.MongoClient(process.env.DB_CONN_STRING as string);
@@ -19,7 +20,7 @@ export async function connectDB(): Promise<void> {
 }
 
 export const collections: {
-  users?: mongoDB.Collection;
+  users?: mongoDB.Collection<UserModel>;
   products?: mongoDB.Collection;
   posts?: mongoDB.Collection<PostModel>;
   categories?: mongoDB.Collection<CategoryModel>;

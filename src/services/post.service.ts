@@ -3,13 +3,12 @@ import { collections } from '../config/mongo.config';
 import { notFound } from '../helpers/APIResponse.handle';
 import type { CreatePostDto } from '../interfaces/post.interface';
 import PostModel from '../models/post.model';
-import type { CreateCategoryDto } from '../interfaces/category.interface';
+import CategoryService from './category.service';
 
 export class PostService {
   async addPost(createPostDto: CreatePostDto): Promise<void> {
-    const [ifCategoryExist] = (await collections.categories
-      ?.aggregate([{ $match: { _id: new ObjectId(createPostDto.category.Id) } }])
-      .toArray()) as CreateCategoryDto[];
+    const categoryService = new CategoryService();
+    await categoryService.getOneCategory(createPostDto.category.id);
     const postModel = new PostModel(createPostDto);
     await collections.posts?.insertOne(postModel);
   }

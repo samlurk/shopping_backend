@@ -15,10 +15,10 @@ export default class PostModel {
   createAt: Date;
   updateAt: Date;
 
-  constructor({ title, description, category: { Id }, image = null }: CreatePostDto) {
+  constructor({ title, description, category: { id }, image = null }: CreatePostDto) {
     this.title = title;
     this.description = description;
-    this.category = { _id: new ObjectId(Id) };
+    this.category = { _id: new ObjectId(id) };
     this.image = image;
     this.interactions = false;
     this.likes = [];

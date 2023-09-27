@@ -2,6 +2,6 @@ export interface MongodbOPerators {
   skip: number;
   limit: number;
   match: object;
-  project: object;
+  projection: object;
   sort: object;
 }

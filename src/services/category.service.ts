@@ -5,6 +5,7 @@ import type { CreateCategoryDto } from '../interfaces/category.interface';
 import CategoryModel from '../models/category.model';
 import { handleReqQuery } from '../helpers/query.handle';
 import type { ReqQueryDto } from '../interfaces/query.interface';
+import type { UpdateCategoryDto } from '../types/category.type';
 
 export default class CategoryService {
   async createOneCategory(createCategoryDto: CreateCategoryDto): Promise<void> {
@@ -12,18 +13,21 @@ export default class CategoryService {
     await collections.categories?.insertOne(categoryModel);
   }
 
-  async getOneCategory(categoryId: string, reqQuery: ReqQueryDto): Promise<CategoryModel> {
-    const { project } = handleReqQuery(reqQuery);
-    const responseCategory = await collections.categories
-      ?.aggregate<CategoryModel>([{ $match: { _id: new ObjectId(categoryId) } }, { $project: project }])
-      .toArray();
-    if (responseCategory === undefined || responseCategory.length === 0) throw notFound('category/category-not-found');
-    const [category] = responseCategory;
-    return category;
+  async getOneCategory(categoryId: string, reqQuery?: ReqQueryDto): Promise<CategoryModel> {
+    let responseCategory: CategoryModel | null | undefined;
+    if (reqQuery === undefined) {
+      responseCategory = await collections.categories?.findOne({ _id: new ObjectId(categoryId) });
+    } else {
+      const { projection } = handleReqQuery(reqQuery);
+      responseCategory = await collections.categories?.findOne({ _id: new ObjectId(categoryId) }, { projection });
+    }
+
+    if (responseCategory === undefined || responseCategory === null) throw notFound('category/category-not-found');
+    return responseCategory;
   }
 
   async getAllCategories(reqQuery: ReqQueryDto): Promise<CategoryModel[]> {
-    const { skip, limit, match, project, sort } = handleReqQuery(reqQuery);
+    const { skip, limit, match, projection, sort } = handleReqQuery(reqQuery);
 
     const responseCategory = await collections.categories
       ?.aggregate<CategoryModel>([
@@ -31,7 +35,7 @@ export default class CategoryService {
         { $skip: skip },
         { $limit: limit },
         { $match: match },
-        { $project: project }
+        { $project: projection }
       ])
       .toArray();
 
@@ -40,7 +44,7 @@ export default class CategoryService {
     return responseCategory;
   }
 
-  async updateOneCategory(categoryId: string, updateCategory: Partial<CreateCategoryDto>): Promise<void> {
+  async updateOneCategory(categoryId: string, updateCategory: UpdateCategoryDto): Promise<void> {
     const responseCategory = await collections.categories?.updateOne(
       { _id: new ObjectId(categoryId) },
       { $set: { ...updateCategory, updateAt: new Date() } }

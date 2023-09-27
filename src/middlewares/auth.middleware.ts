@@ -1,10 +1,10 @@
 import type { Response, NextFunction } from 'express';
 import { type Role } from '../enums/user.enum';
-import type { ReqExtJwt, User } from '../interfaces/user.interface';
-import { unauthorized } from '../helpers/APIResponse.handle';
+import type { ReqExtJwt } from '../interfaces/user.interface';
+import { serverError, unauthorized } from '../helpers/APIResponse.handle';
 import { verifyToken } from '../helpers/jwt.handle';
 import { type HttpMessageResponse } from '../interfaces/httpMessageResponse.interface';
-import { type WithId } from 'mongodb';
+import type { UserSession } from '../types/user.type';
 
 export const authSessionMiddleware = async (
   req: ReqExtJwt,
@@ -12,12 +12,16 @@ export const authSessionMiddleware = async (
   next: NextFunction
 ): Promise<Response | undefined> => {
   try {
-    const user = (await verifyToken(req.cookies.token)) as WithId<User>;
+    const user = (await verifyToken(req.cookies.token)) as UserSession;
     req.user = user;
     next();
   } catch (err) {
-    const typedError = err as HttpMessageResponse;
     res.clearCookie('token');
+    let typedError: HttpMessageResponse;
+    if (err instanceof Error) {
+      typedError = serverError(err.message);
+      return res.status(typedError.code).send(typedError);
+    } else typedError = err as HttpMessageResponse;
     return res.status(typedError.code).send(typedError);
   }
 };
@@ -26,11 +30,15 @@ export const authRoleMiddleware = (
 ): ((req: ReqExtJwt, res: Response, next: NextFunction) => Promise<Response | undefined>) => {
   return async (req: ReqExtJwt, res: Response, next: NextFunction) => {
     try {
-      const user = req.user as User;
-      if (typeof user !== 'string' && user !== null && user.role === role) next();
+      const user = req.user;
+      if (user !== undefined && user.role === role) next();
       else throw unauthorized('Access denied');
     } catch (err) {
-      const typedError = err as HttpMessageResponse;
+      let typedError: HttpMessageResponse;
+      if (err instanceof Error) {
+        typedError = serverError(err.message);
+        return res.status(typedError.code).send(typedError);
+      } else typedError = err as HttpMessageResponse;
       return res.status(typedError.code).send(typedError);
     }
   };

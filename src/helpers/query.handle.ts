@@ -1,5 +1,6 @@
 import type { MongodbOPerators } from '../interfaces/mongodb.interface';
 import type { ReqQueryDto, ReqQueryPagination } from '../interfaces/query.interface';
+import { checkObjectIdOnAnObject } from './mongo.handle';
 
 export const handleReqQuery = (reqQuery: Partial<ReqQueryDto>): MongodbOPerators => {
   //* Changing the data type of the comparison query operators value
@@ -15,6 +16,8 @@ export const handleReqQuery = (reqQuery: Partial<ReqQueryDto>): MongodbOPerators
     ...queryToMatch
   }: ReqQueryDto = JSON.parse(queryStr);
 
+  const match = checkObjectIdOnAnObject(queryToMatch);
+
   const { limit, skip } = queryPagination(reqLimit, reqPage);
   const sort = sortingQueryByFields(reqSort);
   const fields = limitingQueryByFields(reqFields);
@@ -22,8 +25,8 @@ export const handleReqQuery = (reqQuery: Partial<ReqQueryDto>): MongodbOPerators
   return {
     limit,
     skip,
-    match: queryToMatch,
-    project: fields,
+    match,
+    projection: fields,
     sort
   };
 };

@@ -1,19 +1,28 @@
-import { collections } from '../config/mongo.config';
-import type { User } from '../interfaces/user.interface';
+import type { CreateUserDto } from '../interfaces/user.interface';
 import { badCredentials } from '../helpers/APIResponse.handle';
 import { verified } from '../helpers/bcrypt.handle';
 import { generateToken } from '../helpers/jwt.handle';
-import { type WithId } from 'mongodb';
+import { UserService } from './user.service';
+import type { ReqQueryDto } from '../interfaces/query.interface';
+import type { UserSession } from '../types/user.type';
+import { collections } from '../config/mongo.config';
 
 export class AuthService {
-  async loginUser({ email, password }: User): Promise<string> {
-    const user = (await collections.users?.findOne(
-      { email },
-      { projection: { _id: 1, email: 1, password: 1, role: 1 } }
-    )) as WithId<Pick<User, 'email' | 'password' | 'role'>> | undefined;
-    if (user == null) throw badCredentials('Incorrect email');
-    if (!(await verified(password, user.password))) throw badCredentials('Incorrect password');
-    await collections.users?.updateOne({ _id: user._id }, { $set: { metadata: { lastLogin: new Date() } } });
-    return await generateToken({ _id: user._id, role: user.role });
+  async loginUser({ email, password }: CreateUserDto): Promise<string> {
+    const userService = new UserService();
+    const user = await userService.getOneUser({ email } as unknown as ReqQueryDto);
+    if (!(await verified(password, user.password))) throw badCredentials('auth/login/wrong-password');
+    await collections.users?.updateOne(
+      { _id: user._id },
+      { $set: { updateAt: new Date(), 'metadata.lastLogin': new Date() } }
+    );
+    const userSession: UserSession = {
+      _id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role
+    };
+    return await generateToken(userSession);
   }
 }

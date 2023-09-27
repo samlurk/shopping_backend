@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { body } from 'express-validator';
-import { validateResult } from '../helpers/validate.helper';
+import { validateAllowedBodyParams, validateResult } from '../helpers/validate.handle';
+import { Role } from '../enums/user.enum';
 
 export const validateCreateUser = [
   body('firstName').exists().not().isEmpty().withMessage('The first name must not be empty'),
@@ -37,6 +38,7 @@ export const validateCreateUser = [
     .withMessage('The role entered is not valid'),
   body('address').optional().not().isEmpty().withMessage('The address must not be empty'),
   body('avatar').optional().isURL().withMessage('The address must contain a valid URL'),
+  validateAllowedBodyParams(['firstName', 'lastName', 'email', 'password', 'phone', 'role', 'address', 'avatar']),
   (req: Request, res: Response, next: NextFunction) => {
     validateResult(req, res, next);
   }
@@ -73,10 +75,11 @@ export const validateUpdateUser = [
     .not()
     .isEmpty()
     .withMessage('The role must not be empty')
-    .isIn(['vendor', 'customer', 'admin'])
+    .isIn([Role.Vendor, Role.Customer, Role.Admin])
     .withMessage('The role entered is not valid'),
   body('address').optional().not().isEmpty().withMessage('The address must not be empty'),
   body('avatar').optional().isURL().withMessage('The avatar must contain a valid URL'),
+  validateAllowedBodyParams(['firstName', 'lastName', 'email', 'password', 'phone', 'role', 'address', 'avatar']),
   (req: Request, res: Response, next: NextFunction) => {
     validateResult(req, res, next);
   }
@@ -97,6 +100,21 @@ export const validateChangeUserPassword = [
     .withMessage('The password must not be empty')
     .isLength({ min: 8 })
     .withMessage('The password must be at least 8 characters long'),
+  validateAllowedBodyParams(['password', 'oldPassword']),
+  (req: Request, res: Response, next: NextFunction) => {
+    validateResult(req, res, next);
+  }
+];
+
+export const validateForgotUserPassword = [
+  body('email')
+    .exists()
+    .not()
+    .isEmpty()
+    .withMessage('The email must not be empty')
+    .isEmail()
+    .withMessage('You must enter a valid email address'),
+  validateAllowedBodyParams(['email']),
   (req: Request, res: Response, next: NextFunction) => {
     validateResult(req, res, next);
   }
@@ -110,6 +128,7 @@ export const validateResetUserPassword = [
     .withMessage('The password must not be empty')
     .isLength({ min: 8 })
     .withMessage('The password must be at least 8 characters long'),
+  validateAllowedBodyParams(['password']),
   (req: Request, res: Response, next: NextFunction) => {
     validateResult(req, res, next);
   }

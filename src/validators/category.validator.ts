@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { body } from 'express-validator';
-import { validateResult } from '../helpers/validate.helper';
+import { validateAllowedBodyParams, validateResult } from '../helpers/validate.handle';
 import { Type } from '../enums/category.enum';
 
 export const validateCreateCategory = [
@@ -12,6 +12,7 @@ export const validateCreateCategory = [
     .withMessage('The category type must not be empty')
     .isIn([Type.Post, Type.Product])
     .withMessage('The category type must contain a valid type'),
+  validateAllowedBodyParams(['title', 'type']),
   (req: Request, res: Response, next: NextFunction) => {
     validateResult(req, res, next);
   }
@@ -26,6 +27,7 @@ export const validateUpdateCategory = [
     .withMessage('The category type must not be empty')
     .isIn([Type.Post, Type.Product])
     .withMessage('The category type must contain a valid type'),
+  validateAllowedBodyParams(['title', 'type']),
   (req: Request, res: Response, next: NextFunction) => {
     validateResult(req, res, next);
   }

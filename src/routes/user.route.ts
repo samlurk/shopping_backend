@@ -6,7 +6,8 @@ import {
   validateCreateUser,
   validateUpdateUser,
   validateChangeUserPassword,
-  validateResetUserPassword
+  validateResetUserPassword,
+  validateForgotUserPassword
 } from '../validators/user.validator';
 import { validateId } from '../validators/param.validator';
 
@@ -25,8 +26,11 @@ const {
 } = new UserController();
 
 router.get('/all-users', authSessionMiddleware, authRoleMiddleware(Role.Admin), getAll);
+
 router.get('/:id', authSessionMiddleware, authRoleMiddleware(Role.Admin), validateId, getOne);
+
 router.post('/', authSessionMiddleware, authRoleMiddleware(Role.Admin), validateCreateUser, createOne);
+
 router.put(
   '/edit-user/:id',
   authSessionMiddleware,
@@ -35,11 +39,15 @@ router.put(
   validateUpdateUser,
   updateOne
 );
+
 router.delete('/:id', authSessionMiddleware, authRoleMiddleware(Role.Admin), validateId, deleteOne);
+
 router.put('/block-user/:id', authSessionMiddleware, authRoleMiddleware(Role.Admin), validateId, blockUser);
+
 router.put('/unblock-user/:id', authSessionMiddleware, authRoleMiddleware(Role.Admin), validateId, unblockUser);
 
-router.post('/forgot-password', forgotPassword);
+router.post('/forgot-password', validateForgotUserPassword, forgotPassword);
+
 router.post('/reset-password/:token', validateResetUserPassword, resetPassword);
 
 router.put('/password', authSessionMiddleware, validateChangeUserPassword, updatePassword);

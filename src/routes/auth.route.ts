@@ -6,7 +6,7 @@ import { authSessionMiddleware } from '../middlewares/auth.middleware';
 
 const router = Router();
 
-const { createOne } = new UserController<Request, Response>();
+const { createOne } = new UserController();
 const { login, logout } = new AuthController<Request, Response>();
 
 router.post('/register', validateCreateUser, createOne);
