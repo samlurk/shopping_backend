@@ -1,64 +1,85 @@
 import type { Request, Response } from 'express';
-import { deleted, ok } from '../helpers/APIResponse.handle';
+import { deleted, ok, serverError } from '../helpers/APIResponse.handle';
 import type { HttpMessageResponse } from '../interfaces/httpMessageResponse.interface';
-import type { ReqExtJwt } from '../interfaces/user.interface';
+import type { ReqJwt } from '../interfaces/user.interface';
 import { PostService } from '../services/post.service';
+import type { CreatePostDto } from '../interfaces/post.interface';
 
-export class PostController<T extends Request, U extends Response> {
-  async createOne({ body }: T, res: U): Promise<U> {
+export class PostController {
+  async createOne({ user, body }: Request<unknown, unknown, CreatePostDto> & ReqJwt, res: Response): Promise<Response> {
     try {
       const postService = new PostService();
-      await postService.addPost(body);
+      await postService.addPost(user?._id, body);
       const response = ok('Post created');
       return res.status(response.code).send(response);
     } catch (err) {
-      const typedError = err as HttpMessageResponse;
+      let typedError: HttpMessageResponse;
+      if (err instanceof Error) {
+        typedError = serverError(err.message);
+        return res.status(typedError.code).send(typedError);
+      } else typedError = err as HttpMessageResponse;
       return res.status(typedError.code).send(typedError);
     }
   }
 
-  async getAll(_: T, res: U): Promise<U> {
+  async getAll(_: Request, res: Response): Promise<Response> {
     try {
       const postService = new PostService();
       const response = ok('Posts received', await postService.getPosts());
       return res.status(response.code).send(response);
     } catch (err) {
-      const typedError = err as HttpMessageResponse;
+      let typedError: HttpMessageResponse;
+      if (err instanceof Error) {
+        typedError = serverError(err.message);
+        return res.status(typedError.code).send(typedError);
+      } else typedError = err as HttpMessageResponse;
       return res.status(typedError.code).send(typedError);
     }
   }
 
-  async getOne({ params: { id } }: T, res: U): Promise<U> {
+  async getOne({ params: { id } }: Request, res: Response): Promise<Response> {
     try {
       const postService = new PostService();
       const response = ok('Post received', await postService.getPost(id));
       return res.status(response.code).send(response);
     } catch (err) {
-      const typedError = err as HttpMessageResponse;
+      let typedError: HttpMessageResponse;
+      if (err instanceof Error) {
+        typedError = serverError(err.message);
+        return res.status(typedError.code).send(typedError);
+      } else typedError = err as HttpMessageResponse;
       return res.status(typedError.code).send(typedError);
     }
   }
 
-  async updateOne({ params: { id }, body }: T, res: U): Promise<U> {
+  async updateOne({ params: { id }, body }: Request, res: Response): Promise<Response> {
     try {
       const postService = new PostService();
       await postService.updatePost(id, body);
       const response = ok('Post updated');
       return res.status(response.code).send(response);
     } catch (err) {
-      const typedError = err as HttpMessageResponse;
+      let typedError: HttpMessageResponse;
+      if (err instanceof Error) {
+        typedError = serverError(err.message);
+        return res.status(typedError.code).send(typedError);
+      } else typedError = err as HttpMessageResponse;
       return res.status(typedError.code).send(typedError);
     }
   }
 
-  async deleteOne({ params: { id } }: T, res: U): Promise<U> {
+  async deleteOne({ params: { id } }: Request, res: Response): Promise<Response> {
     try {
       const postService = new PostService();
       await postService.deletePost(id);
       const response = deleted('Post removed');
       return res.status(response.code).send(response);
     } catch (err) {
-      const typedError = err as HttpMessageResponse;
+      let typedError: HttpMessageResponse;
+      if (err instanceof Error) {
+        typedError = serverError(err.message);
+        return res.status(typedError.code).send(typedError);
+      } else typedError = err as HttpMessageResponse;
       return res.status(typedError.code).send(typedError);
     }
   }

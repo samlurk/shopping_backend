@@ -115,7 +115,6 @@ export class UserService {
 
   async resetUserPassword(token: string, password: string): Promise<void> {
     const payload = (await verifyToken(token)) as { _id: string };
-    console.log(typeof payload._id);
     await collections.users?.updateOne(
       { _id: new ObjectId(payload._id) },
       { $set: { password: await encrypt(password), updateAt: new Date() } }

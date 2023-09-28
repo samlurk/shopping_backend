@@ -5,6 +5,7 @@ import CategoryService from '../services/category.service';
 import type { CreateCategoryDto } from '../interfaces/category.interface';
 import type { ParamsDictionary } from 'express-serve-static-core';
 import type { ReqQueryDto } from '../interfaces/query.interface';
+import { ObjectId } from 'mongodb';
 
 export default class CategoryController {
   async createOneCategory({ body }: Request<unknown, unknown, CreateCategoryDto>, res: Response): Promise<Response> {
@@ -47,7 +48,10 @@ export default class CategoryController {
   ): Promise<Response> {
     try {
       const categoryService = new CategoryService();
-      const response = ok('Category received', await categoryService.getOneCategory(id, query));
+      const response = ok(
+        'Category received',
+        await categoryService.getOneCategory({ _id: new ObjectId(id), ...query } as unknown as ReqQueryDto)
+      );
       return res.status(response.code).send(response);
     } catch (err) {
       let typedError: HttpMessageResponse;

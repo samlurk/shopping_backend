@@ -13,14 +13,9 @@ export default class CategoryService {
     await collections.categories?.insertOne(categoryModel);
   }
 
-  async getOneCategory(categoryId: string, reqQuery?: ReqQueryDto): Promise<CategoryModel> {
-    let responseCategory: CategoryModel | null | undefined;
-    if (reqQuery === undefined) {
-      responseCategory = await collections.categories?.findOne({ _id: new ObjectId(categoryId) });
-    } else {
-      const { projection } = handleReqQuery(reqQuery);
-      responseCategory = await collections.categories?.findOne({ _id: new ObjectId(categoryId) }, { projection });
-    }
+  async getOneCategory(reqQuery: ReqQueryDto): Promise<CategoryModel> {
+    const { projection, match } = handleReqQuery(reqQuery);
+    const responseCategory = await collections.categories?.findOne(match, { projection });
 
     if (responseCategory === undefined || responseCategory === null) throw notFound('category/category-not-found');
     return responseCategory;

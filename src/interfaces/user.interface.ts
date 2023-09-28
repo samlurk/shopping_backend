@@ -1,4 +1,3 @@
-import type { Request } from 'express';
 import type { Role } from '../enums/user.enum';
 import type { JwtPayload } from 'jsonwebtoken';
 import type { UserSession } from '../types/user.type';
@@ -20,6 +19,6 @@ export interface MetaData {
   timezone: string;
 }
 
-export interface ReqExtJwt extends Request {
+export interface ReqJwt {
   user?: JwtPayload | UserSession;
 }

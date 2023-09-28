@@ -2,15 +2,19 @@ import { ObjectId } from 'mongodb';
 import { collections } from '../config/mongo.config';
 import { notFound } from '../helpers/APIResponse.handle';
 import type { CreatePostDto } from '../interfaces/post.interface';
-import PostModel from '../models/post.model';
+import type PostModel from '../models/post.model';
 import CategoryService from './category.service';
+import type { ReqQueryDto } from '../interfaces/query.interface';
+import { Type } from '../enums/category.enum';
 
 export class PostService {
-  async addPost(createPostDto: CreatePostDto): Promise<void> {
-    const categoryService = new CategoryService();
-    await categoryService.getOneCategory(createPostDto.category.id);
-    const postModel = new PostModel(createPostDto);
-    await collections.posts?.insertOne(postModel);
+  async addPost(author: string, createPostDto: CreatePostDto): Promise<void> {
+    const responseCategory = await collections.categories?.findOne({
+      $or: [{ _id: new ObjectId(createPostDto.category) }, { title: 'Uncategorized', type: Type.Post }]
+    });
+    console.log(responseCategory);
+    // const postModel = new PostModel(createPostDto, author);
+    // await collections.posts?.insertOne(postModel);
   }
 
   async getPosts(): Promise<CreatePostDto[]> {

@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import { UserService } from '../services/user.service';
 import { created, ok, deleted, serverError } from '../helpers/APIResponse.handle';
 import type { HttpMessageResponse } from '../interfaces/httpMessageResponse.interface';
-import type { CreateUserDto, ReqExtJwt } from '../interfaces/user.interface';
+import type { CreateUserDto, ReqJwt } from '../interfaces/user.interface';
 import type { ParamsDictionary } from 'express-serve-static-core';
 import type { ReqQueryDto } from '../interfaces/query.interface';
 import { ObjectId } from 'mongodb';
@@ -127,7 +127,7 @@ export class UserController {
     }
   }
 
-  async updatePassword({ user, body: { password, oldPassword } }: ReqExtJwt, res: Response): Promise<Response> {
+  async updatePassword({ user, body: { password, oldPassword } }: Request & ReqJwt, res: Response): Promise<Response> {
     try {
       const userService = new UserService();
       await userService.updateUserPassword(user?._id, password, oldPassword);

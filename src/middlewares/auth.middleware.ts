@@ -1,13 +1,13 @@
-import type { Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { type Role } from '../enums/user.enum';
-import type { ReqExtJwt } from '../interfaces/user.interface';
+import type { ReqJwt } from '../interfaces/user.interface';
 import { serverError, unauthorized } from '../helpers/APIResponse.handle';
 import { verifyToken } from '../helpers/jwt.handle';
 import { type HttpMessageResponse } from '../interfaces/httpMessageResponse.interface';
 import type { UserSession } from '../types/user.type';
 
 export const authSessionMiddleware = async (
-  req: ReqExtJwt,
+  req: Request & ReqJwt,
   res: Response,
   next: NextFunction
 ): Promise<Response | undefined> => {
@@ -27,8 +27,8 @@ export const authSessionMiddleware = async (
 };
 export const authRoleMiddleware = (
   role: Role
-): ((req: ReqExtJwt, res: Response, next: NextFunction) => Promise<Response | undefined>) => {
-  return async (req: ReqExtJwt, res: Response, next: NextFunction) => {
+): ((req: Request & ReqJwt, res: Response, next: NextFunction) => Promise<Response | undefined>) => {
+  return async (req: ReqJwt, res: Response, next: NextFunction) => {
     try {
       const user = req.user;
       if (user !== undefined && user.role === role) next();

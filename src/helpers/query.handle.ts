@@ -5,7 +5,7 @@ import { checkObjectIdOnAnObject } from './mongo.handle';
 export const handleReqQuery = (reqQuery: Partial<ReqQueryDto>): MongodbOPerators => {
   //* Changing the data type of the comparison query operators value
   const queryStr = JSON.stringify(reqQuery)
-    .replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`)
+    .replace(/\b(gte|gt|lte|lt|or)\b/g, (match) => `$${match}`)
     .replace(/\W\d+\W/gm, (match) => match.slice(1, match.length - 1));
 
   const {
@@ -16,8 +16,7 @@ export const handleReqQuery = (reqQuery: Partial<ReqQueryDto>): MongodbOPerators
     ...queryToMatch
   }: ReqQueryDto = JSON.parse(queryStr);
 
-  const match = checkObjectIdOnAnObject(queryToMatch);
-
+  const match = checkObjectIdOnAnObject(queryToMatch) as object;
   const { limit, skip } = queryPagination(reqLimit, reqPage);
   const sort = sortingQueryByFields(reqSort);
   const fields = limitingQueryByFields(reqFields);

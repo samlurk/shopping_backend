@@ -1,6 +1,7 @@
 export interface CreatePostDto {
   title: string;
   description: string;
-  category: { id: string };
+  category: string;
   image: string | null;
+  interactions: boolean;
 }
