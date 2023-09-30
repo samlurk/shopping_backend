@@ -50,7 +50,7 @@ export default class CategoryController {
       const categoryService = new CategoryService();
       const response = ok(
         'Category received',
-        await categoryService.getOneCategory({ _id: new ObjectId(id), ...query } as unknown as ReqQueryDto)
+        await categoryService.getOneCategory({ _id: new ObjectId(id), ...query })
       );
       return res.status(response.code).send(response);
     } catch (err) {

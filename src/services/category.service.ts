@@ -4,7 +4,6 @@ import { notFound } from '../helpers/APIResponse.handle';
 import type { CreateCategoryDto } from '../interfaces/category.interface';
 import CategoryModel from '../models/category.model';
 import { handleReqQuery } from '../helpers/query.handle';
-import type { ReqQueryDto } from '../interfaces/query.interface';
 import type { UpdateCategoryDto } from '../types/category.type';
 
 export default class CategoryService {
@@ -13,7 +12,7 @@ export default class CategoryService {
     await collections.categories?.insertOne(categoryModel);
   }
 
-  async getOneCategory(reqQuery: ReqQueryDto): Promise<CategoryModel> {
+  async getOneCategory(reqQuery: object): Promise<CategoryModel> {
     const { projection, match } = handleReqQuery(reqQuery);
     const responseCategory = await collections.categories?.findOne(match, { projection });
 
@@ -21,7 +20,7 @@ export default class CategoryService {
     return responseCategory;
   }
 
-  async getAllCategories(reqQuery: ReqQueryDto): Promise<CategoryModel[]> {
+  async getAllCategories(reqQuery: object): Promise<CategoryModel[]> {
     const { skip, limit, match, projection, sort } = handleReqQuery(reqQuery);
 
     const responseCategory = await collections.categories

@@ -1,10 +1,11 @@
-import type { WithId } from 'mongodb';
 import type { CreateProductDto, Ratings } from '../interfaces/product.interface';
 import type { Color } from '../enums/product.enum';
 import type UserModel from './user.model';
+import type { ObjectId } from 'mongodb';
 
 // Declare the Schema of the Mongo model
 export default class ProductModel {
+  _id?: ObjectId;
   title: string;
   description: string | null;
   price: number;
@@ -15,21 +16,24 @@ export default class ProductModel {
   images: string[];
   color: Color | null;
   ratings: Ratings[];
-  vendor: WithId<UserModel>;
+  vendor: Partial<UserModel>;
   createAt: Date;
   updateAt: Date;
 
-  constructor({
-    title,
-    description = null,
-    price,
-    slug,
-    brand = null,
-    quantity,
-    sold,
-    color = null,
-    images = []
-  }: CreateProductDto) {
+  constructor(
+    {
+      title,
+      description = null,
+      price,
+      slug,
+      brand = null,
+      quantity,
+      sold,
+      color = null,
+      images = []
+    }: CreateProductDto,
+    vendor: Pick<UserModel, '_id'>
+  ) {
     this.title = title;
     this.description = description;
     this.price = price;
@@ -40,6 +44,7 @@ export default class ProductModel {
     this.color = color;
     this.images = images;
     this.ratings = [];
+    this.vendor = vendor;
     this.createAt = new Date();
     this.updateAt = new Date();
   }

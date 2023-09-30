@@ -1,29 +1,34 @@
-import { ObjectId, type WithId } from 'mongodb';
+import type { ObjectId } from 'mongodb';
 import type { CreatePostDto } from '../interfaces/post.interface';
 import type CategoryModel from './category.model';
+import type UserModel from './user.model';
 
 export default class PostModel {
   title: string;
   description: string;
-  category: ObjectId | WithId<CategoryModel>;
+  category: Partial<CategoryModel>;
   image: string | null;
   interactions: boolean;
   likes: ObjectId[];
   dislikes: ObjectId[];
-  author: ObjectId | WithId<PostModel>;
+  author: Partial<UserModel>;
   numViews: number;
   createAt: Date;
   updateAt: Date;
 
-  constructor({ title, description, category, image = null, interactions = true }: CreatePostDto, author: string) {
+  constructor(
+    { title, description, image = null, interactions = true }: Omit<CreatePostDto, 'category'>,
+    category: Pick<CategoryModel, '_id'>,
+    author: Pick<UserModel, '_id'>
+  ) {
     this.title = title;
     this.description = description;
-    this.category = new ObjectId(category);
+    this.category = category;
     this.image = image;
     this.interactions = interactions;
     this.likes = [];
     this.dislikes = [];
-    this.author = new ObjectId(author);
+    this.author = author;
     this.numViews = 0;
     this.createAt = new Date();
     this.updateAt = new Date();

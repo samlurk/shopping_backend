@@ -2,25 +2,39 @@ import { ObjectId } from 'mongodb';
 import { collections } from '../config/mongo.config';
 import { notFound } from '../helpers/APIResponse.handle';
 import type { CreatePostDto } from '../interfaces/post.interface';
-import type PostModel from '../models/post.model';
+import PostModel from '../models/post.model';
 import CategoryService from './category.service';
-import type { ReqQueryDto } from '../interfaces/query.interface';
 import { Type } from '../enums/category.enum';
+import { UserService } from './user.service';
+import type CategoryModel from '../models/category.model';
+import { handleReqQuery } from '../helpers/query.handle';
 
 export class PostService {
   async addPost(author: string, createPostDto: CreatePostDto): Promise<void> {
-    const responseCategory = await collections.categories?.findOne({
+    const categoryService = new CategoryService();
+    const userService = new UserService();
+    // if it finds the category, if it doesn't find it, it places a default one and if it doesn't exist, it throws an error.
+    const responseCategory = await categoryService.getAllCategories({
       $or: [{ _id: new ObjectId(createPostDto.category) }, { title: 'Uncategorized', type: Type.Post }]
     });
-    console.log(responseCategory);
-    // const postModel = new PostModel(createPostDto, author);
-    // await collections.posts?.insertOne(postModel);
+    const category =
+      responseCategory.length === 2
+        ? (responseCategory.find(({ _id }) => _id === new ObjectId(createPostDto.category)) as CategoryModel)
+        : responseCategory[0];
+    const responseUser = await userService.getOneUser({ _id: new ObjectId(author) });
+    const postModel = new PostModel(createPostDto, category, responseUser);
+    await collections.posts?.insertOne(postModel);
   }
 
-  async getPosts(): Promise<CreatePostDto[]> {
+  async getPosts(reqQuery: object): Promise<CreatePostDto[]> {
+    const { skip, limit, match, projection, sort } = handleReqQuery(reqQuery);
+
     const responsePost = (await collections.posts
       ?.aggregate([
-        { $match: {} },
+        { $match: match },
+        { $sort: sort },
+        { $skip: skip },
+        { $limit: limit },
         {
           $lookup: {
             from: 'post_categories',
@@ -32,6 +46,7 @@ export class PostService {
         {
           $unwind: '$category'
         },
+        { $project: projection },
         {
           $set: {
             numViews: { $add: ['$numViews', 1] }
@@ -40,14 +55,16 @@ export class PostService {
       ])
       .toArray()) as CreatePostDto[];
     if (responsePost.length === 0) throw notFound('post/all-posts/no-post-found');
-    await collections.posts?.updateMany({}, { $inc: { numViews: 1 } });
+    await collections.posts?.updateMany(match, { $inc: { numViews: 1 } });
     return responsePost;
   }
 
-  async getPost(postId: string): Promise<PostModel> {
+  async getPost(reqQuery: object): Promise<PostModel> {
+    const { match, projection } = handleReqQuery(reqQuery);
+
     const [responsePost] = (await collections.posts
       ?.aggregate([
-        { $match: { _id: new ObjectId(postId) } },
+        { $match: match },
         {
           $lookup: {
             from: 'post_categories',
@@ -59,6 +76,7 @@ export class PostService {
         {
           $unwind: '$category'
         },
+        { $project: projection },
         {
           $set: {
             numViews: { $add: ['$numViews', 1] }
@@ -67,7 +85,7 @@ export class PostService {
       ])
       .toArray()) as PostModel[];
     if (responsePost === undefined) throw notFound('post/post-not-found');
-    await collections.posts?.updateOne({ _id: new ObjectId(postId) }, { $inc: { numViews: 1 } });
+    await collections.posts?.updateOne(match, { $inc: { numViews: 1 } });
     return responsePost;
   }
 

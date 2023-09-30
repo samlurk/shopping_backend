@@ -50,7 +50,7 @@ export class UserController {
       const userService = new UserService();
       const response = ok(
         'User received',
-        await userService.getOneUser({ _id: new ObjectId(id), fields: query.fields } as unknown as ReqQueryDto)
+        await userService.getOneUser({ _id: new ObjectId(id), fields: query.fields })
       );
       return res.status(response.code).send(response);
     } catch (err) {

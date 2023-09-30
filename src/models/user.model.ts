@@ -1,8 +1,10 @@
+import type { ObjectId } from 'mongodb';
 import { Role } from '../enums/user.enum';
 import type { CreateUserDto, MetaData } from '../interfaces/user.interface';
 
 // Declare the Schema of the Mongo model
 export default class UserModel {
+  _id?: ObjectId;
   firstName: string;
   lastName: string;
   email: string;

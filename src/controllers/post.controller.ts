@@ -4,6 +4,9 @@ import type { HttpMessageResponse } from '../interfaces/httpMessageResponse.inte
 import type { ReqJwt } from '../interfaces/user.interface';
 import { PostService } from '../services/post.service';
 import type { CreatePostDto } from '../interfaces/post.interface';
+import type { ReqQueryDto } from '../interfaces/query.interface';
+import type { ParamsDictionary } from 'express-serve-static-core';
+import { ObjectId } from 'mongodb';
 
 export class PostController {
   async createOne({ user, body }: Request<unknown, unknown, CreatePostDto> & ReqJwt, res: Response): Promise<Response> {
@@ -22,10 +25,13 @@ export class PostController {
     }
   }
 
-  async getAll(_: Request, res: Response): Promise<Response> {
+  async getAll(
+    { query }: Request<unknown, unknown, unknown, ReqQueryDto & qs.ParsedQs>,
+    res: Response
+  ): Promise<Response> {
     try {
       const postService = new PostService();
-      const response = ok('Posts received', await postService.getPosts());
+      const response = ok('Posts received', await postService.getPosts(query));
       return res.status(response.code).send(response);
     } catch (err) {
       let typedError: HttpMessageResponse;
@@ -37,10 +43,13 @@ export class PostController {
     }
   }
 
-  async getOne({ params: { id } }: Request, res: Response): Promise<Response> {
+  async getOne(
+    { params: { id }, query }: Request<ParamsDictionary, unknown, unknown, ReqQueryDto & qs.ParsedQs>,
+    res: Response
+  ): Promise<Response> {
     try {
       const postService = new PostService();
-      const response = ok('Post received', await postService.getPost(id));
+      const response = ok('Post received', await postService.getPost({ _id: new ObjectId(id), ...query }));
       return res.status(response.code).send(response);
     } catch (err) {
       let typedError: HttpMessageResponse;

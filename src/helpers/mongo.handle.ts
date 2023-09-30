@@ -14,13 +14,17 @@ export const checkObjectIdOnAnObject = (value: unknown): unknown => {
           acc2 = [...acc2, checkObjectIdOnAnObject(curr2)];
           return acc2;
         }, []);
+        return acc;
       } else if (typeof objectToCheck[key] === 'object') {
         acc[key] = checkObjectIdOnAnObject(objectToCheck[key]);
+        return acc;
       }
       // check if is an ObjectId
       else if (typeof objectToCheck[key] === 'string' && ObjectId.isValid(objectToCheck[key] as string)) {
         acc[key] = new ObjectId(objectToCheck[key] as string);
+        return acc;
       }
+      acc[key] = objectToCheck[key];
       return acc;
     }, {});
   }

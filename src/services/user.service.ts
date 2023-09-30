@@ -2,12 +2,11 @@ import { collections } from '../config/mongo.config';
 import type { CreateUserDto } from '../interfaces/user.interface';
 import { encrypt, verified } from '../helpers/bcrypt.handle';
 import UserModel from '../models/user.model';
-import { ObjectId, type WithId } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import { forbidden, notFound } from '../helpers/APIResponse.handle';
 import EmailService from '../services/email.service';
 import { generateToken, verifyToken } from '../helpers/jwt.handle';
 import { handleReqQuery } from '../helpers/query.handle';
-import type { ReqQueryDto } from '../interfaces/query.interface';
 import type { UpdateUserDto } from '../types/user.type';
 
 export class UserService {
@@ -27,7 +26,7 @@ export class UserService {
   private async getUserUniqueKeys({
     email,
     phone
-  }: Pick<CreateUserDto, 'phone' | 'email'>): Promise<Pick<WithId<UserModel>, 'email' | 'phone'> | null | undefined> {
+  }: Pick<CreateUserDto, 'phone' | 'email'>): Promise<Pick<UserModel, 'email' | 'phone'> | null | undefined> {
     return await collections.users?.findOne(
       {
         $or: [{ email }, { phone }]
@@ -36,7 +35,7 @@ export class UserService {
     );
   }
 
-  async getAllUsers(reqQuery: ReqQueryDto): Promise<WithId<UserModel[]>> {
+  async getAllUsers(reqQuery: object): Promise<UserModel[]> {
     const { skip, limit, match, projection, sort } = handleReqQuery(reqQuery);
     const responseUser = await collections.users
       ?.aggregate<UserModel>([
@@ -48,10 +47,10 @@ export class UserService {
       ])
       .toArray();
     if (responseUser === undefined || responseUser.length === 0) throw notFound('user/all-users/no-users-found');
-    return responseUser as WithId<UserModel[]>;
+    return responseUser;
   }
 
-  async getOneUser(reqQuery: ReqQueryDto): Promise<WithId<UserModel>> {
+  async getOneUser(reqQuery: object): Promise<UserModel> {
     const { projection, match } = handleReqQuery(reqQuery);
     const responseUser = await collections.users?.findOne(match, { projection });
 
@@ -93,7 +92,7 @@ export class UserService {
     const currentUser = await this.getOneUser({
       _id: new ObjectId(userId),
       fields: 'password'
-    } as unknown as ReqQueryDto);
+    });
     if (!(await verified(oldPassword, currentUser.password))) throw notFound('user/edit-user/wrong-password');
     await collections.users?.updateOne(
       { _id: new ObjectId(userId) },
@@ -102,7 +101,7 @@ export class UserService {
   }
 
   async forgotUserPassword(email: string): Promise<void> {
-    const user = await this.getOneUser({ email, fields: '_id' } as unknown as ReqQueryDto);
+    const user = await this.getOneUser({ email, fields: '_id' });
     const token = await generateToken(user, '10m');
     const emailService = new EmailService();
     await emailService.sendMail(
