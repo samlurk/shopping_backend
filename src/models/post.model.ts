@@ -4,13 +4,14 @@ import type CategoryModel from './category.model';
 import type UserModel from './user.model';
 
 export default class PostModel {
+  _id?: ObjectId;
   title: string;
   description: string;
   category: Partial<CategoryModel>;
   image: string | null;
   interactions: boolean;
-  likes: ObjectId[];
-  dislikes: ObjectId[];
+  likes: Array<Partial<UserModel>>;
+  dislikes: Array<Partial<UserModel>>;
   author: Partial<UserModel>;
   numViews: number;
   createAt: Date;

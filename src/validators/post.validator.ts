@@ -20,7 +20,7 @@ export const validateCreatePost = [
   body('title').exists().not().isEmpty().withMessage('The post name must not be empty'),
   body('description').exists().not().isEmpty().withMessage('The post description must not be empty'),
   body('category')
-    .exists()
+    .optional()
     .not()
     .isEmpty()
     .withMessage('The category must not be empty')

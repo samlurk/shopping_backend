@@ -1,4 +1,4 @@
-import { collections } from '../config/mongo.config';
+import { collections } from '../config/mongo-collections.config';
 import { type DeleteResult, ObjectId, type InsertOneResult, type UpdateResult } from 'mongodb';
 import { forbidden, notFound, serverError } from '../helpers/APIResponse.handle';
 import ProductModel from '../models/product.model';

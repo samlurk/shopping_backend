@@ -1,4 +1,4 @@
-import { collections } from '../config/mongo.config';
+import { collections } from '../config/mongo-collections.config';
 import type { CreateUserDto } from '../interfaces/user.interface';
 import { encrypt, verified } from '../helpers/bcrypt.handle';
 import UserModel from '../models/user.model';
@@ -8,8 +8,15 @@ import EmailService from '../services/email.service';
 import { generateToken, verifyToken } from '../helpers/jwt.handle';
 import { handleReqQuery } from '../helpers/query.handle';
 import type { UpdateUserDto } from '../types/user.type';
+import MongoDbService from './mongo.service';
 
 export class UserService {
+  mongoService: MongoDbService;
+
+  constructor() {
+    this.mongoService = new MongoDbService();
+  }
+
   // Adding new entry
   async addUser(createUserDto: CreateUserDto): Promise<void> {
     // Verify if the email and phone entered exist in another registry.
@@ -46,7 +53,7 @@ export class UserService {
         { $project: projection }
       ])
       .toArray();
-    if (responseUser === undefined || responseUser.length === 0) throw notFound('user/all-users/no-users-found');
+    if (responseUser.length === 0) throw notFound('user/all-users/no-users-found');
     return responseUser;
   }
 
@@ -61,6 +68,7 @@ export class UserService {
   async deleteOneUser(userId: string): Promise<void> {
     const responseUser = await collections.users?.deleteOne({ _id: new ObjectId(userId) });
     if (responseUser?.deletedCount === 0) throw notFound('User not found');
+    await this.mongoService.remove(collections.users.collectionName, new ObjectId(userId));
   }
 
   async updateOneUser(userId: string, user: UpdateUserDto): Promise<void> {

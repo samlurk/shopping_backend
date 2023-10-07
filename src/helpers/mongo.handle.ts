@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 import { ObjectId } from 'mongodb';
+import type { MongoRemove } from '../interfaces/mongodb.interface';
 
 export const checkObjectIdOnAnObject = (value: unknown): unknown => {
   if (typeof value === 'object' && value !== null) {
@@ -32,4 +33,24 @@ export const checkObjectIdOnAnObject = (value: unknown): unknown => {
   if (typeof value === 'string' && ObjectId.isValid(value)) return new ObjectId(value);
 
   return value;
+};
+
+export const revertMongoObjectToArrayToUpdate = (arr: MongoRemove[]): { $or: object[]; $pull: object } => {
+  return arr.reduce(
+    (acc: { $or: object[]; $pull: object }, { matchingArray }) => {
+      if (matchingArray.length > 0) {
+        matchingArray.forEach((element) => {
+          const key = element.k;
+          const [value] = element.v;
+
+          if (Object.keys(value).length !== 0) {
+            const query = { [key]: value };
+            acc = { ...acc, $or: [...acc.$or, query], $pull: { ...acc.$pull, ...query } };
+          }
+        });
+      }
+      return acc;
+    },
+    { $or: [], $pull: {} }
+  );
 };
