@@ -35,7 +35,10 @@ export const checkObjectIdOnAnObject = (value: unknown): unknown => {
   return value;
 };
 
-export const revertMongoObjectToArrayToUpdate = (arr: MongoRemove[]): { $or: object[]; $pull: object } => {
+export const revertMongoObjectToArrayToUpdate = (
+  arr: MongoRemove[],
+  idToMatch: ObjectId
+): { $or: object[]; $pull: object } => {
   return arr.reduce(
     (acc: { $or: object[]; $pull: object }, { matchingArray }) => {
       if (matchingArray.length > 0) {
@@ -43,7 +46,7 @@ export const revertMongoObjectToArrayToUpdate = (arr: MongoRemove[]): { $or: obj
           const key = element.k;
           const [value] = element.v;
 
-          if (Object.keys(value).length !== 0) {
+          if (Object.keys(value).length !== 0 && value._id.equals(idToMatch)) {
             const query = { [key]: value };
             acc = { ...acc, $or: [...acc.$or, query], $pull: { ...acc.$pull, ...query } };
           }

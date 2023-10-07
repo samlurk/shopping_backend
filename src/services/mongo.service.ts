@@ -1,5 +1,5 @@
 /* eslint-disable no-loops/no-loops */
-import { type Db, MongoClient, type Collection, type BSON, type ObjectId } from 'mongodb';
+import { type Db, MongoClient, type Collection, type BSON, type ObjectId, PullOperator } from 'mongodb';
 import type { MongoRemove } from '../interfaces/mongodb.interface';
 import { revertMongoObjectToArrayToUpdate } from '../helpers/mongo.handle';
 
@@ -123,11 +123,14 @@ export class MongoDbService {
               await this.getCollection(collections[i].name).deleteMany({ ...objectToMatch });
             }
             // documents matching the object are removed (relation n-n)
-            const { $or, $pull } = revertMongoObjectToArrayToUpdate(response);
+            const { $or, $pull } = revertMongoObjectToArrayToUpdate(response, _id);
             if ($or.length !== 0 && Object.keys($pull).length !== 0) {
               await this.getCollection(collections[i].name).updateMany(
                 { $or },
-                { $pull, $set: { updateAt: new Date() } }
+                {
+                  $pull,
+                  $set: { updateAt: new Date() }
+                }
               );
             }
           }

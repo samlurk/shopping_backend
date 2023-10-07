@@ -1,4 +1,4 @@
-import type { BSON } from 'mongodb';
+import type { BSON, ObjectId } from 'mongodb';
 
 export interface MongodbOPerators {
   skip: number;
@@ -15,5 +15,5 @@ export interface MongoRemove extends BSON.Document {
 
 export interface ObjectToArray {
   k: string;
-  v: object[];
+  v: Array<{ _id: ObjectId }>;
 }
