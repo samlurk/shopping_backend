@@ -2,6 +2,7 @@ import type { CreateProductDto, Ratings } from '../interfaces/product.interface'
 import type { Color } from '../enums/product.enum';
 import type UserModel from './user.model';
 import type { ObjectId } from 'mongodb';
+import type CategoryModel from './category.model';
 
 // Declare the Schema of the Mongo model
 export default class ProductModel {
@@ -10,6 +11,7 @@ export default class ProductModel {
   description: string | null;
   price: number;
   slug: string;
+  category: Partial<CategoryModel>;
   brand: string | null;
   quantity: number;
   sold: number;
@@ -28,16 +30,18 @@ export default class ProductModel {
       slug,
       brand = null,
       quantity,
-      sold,
+      sold = 0,
       color = null,
       images = []
     }: CreateProductDto,
-    vendor: Pick<UserModel, '_id'>
+    vendor: Pick<UserModel, '_id'>,
+    category: Pick<CategoryModel, '_id'>
   ) {
     this.title = title;
     this.description = description;
     this.price = price;
     this.slug = slug;
+    this.category = category;
     this.brand = brand;
     this.quantity = quantity;
     this.sold = sold;

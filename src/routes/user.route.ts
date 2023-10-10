@@ -18,8 +18,8 @@ const {
   createOne,
   updateOne,
   deleteOne,
-  blockUser,
-  unblockUser,
+  blockOne: blockUser,
+  unblockOne: unblockUser,
   updatePassword,
   forgotPassword,
   resetPassword

@@ -20,17 +20,17 @@ export const verifyToken = async (token: string): Promise<string | JwtPayload | 
   // Decode the token into its payload and signature components
   const decodedToken = decode(token) as JwtPayload | null;
 
-  if (decodedToken === null) throw unauthorized('Access denied');
+  if (decodedToken === null) throw unauthorized('auth/access-denied');
   // Verify the signature using the secret key
   const signature = crypto
     .createHmac('sha256', JWT_SECRET)
     .update(JSON.stringify(decodedToken.payload))
     .digest('base64');
-  if (decodedToken.signature !== signature) throw unauthorized('Invalid token signature');
+  if (decodedToken.signature !== signature) throw unauthorized('auth/invalid-token-signature');
 
   // Verify that the token has not expired
   verify(token, JWT_SECRET, (err, _) => {
-    if (err !== null) throw unauthorized('Token Expired');
+    if (err !== null) throw unauthorized('auth/token-expired');
   });
 
   // If all checks pass, return the payload

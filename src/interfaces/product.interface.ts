@@ -10,6 +10,7 @@ export interface CreateProductDto {
   description: string | null;
   price: number;
   slug: string;
+  category: string;
   brand: string | null;
   quantity: number;
   sold: number;

@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { check } from 'express-validator';
-import { validateResult } from '../helpers/validate.handle';
+import { validateAllowedBodyParams, validateResult } from '../helpers/validate.handle';
 
 export const validateCreateProduct = [
   check('title').exists().not().isEmpty().withMessage('The product name must not be empty'),
@@ -24,13 +24,6 @@ export const validateCreateProduct = [
     .not()
     .isEmpty()
     .withMessage('The product category must not be empty')
-    .isObject()
-    .withMessage('The product category must be an Object'),
-  check('category._id')
-    .optional()
-    .not()
-    .isEmpty()
-    .withMessage('The product categoryID must not be empty')
     .isMongoId()
     .withMessage('The product categoryID must be an ObjectId'),
   check('brand')
@@ -41,7 +34,7 @@ export const validateCreateProduct = [
     .isString()
     .withMessage('The product brand must be a valid string'),
   check('quantity')
-    .optional()
+    .exists()
     .not()
     .isEmpty()
     .withMessage('The product quantity must not be empty')
@@ -73,6 +66,13 @@ export const validateCreateProduct = [
     .not()
     .isEmpty()
     .withMessage('The product color must not be empty')
+    .isArray()
+    .withMessage('The product color must be a string arrays'),
+  check('color.*')
+    .optional()
+    .not()
+    .isEmpty()
+    .withMessage('The product color must not be empty')
     .isIn([
       'black',
       'red',
@@ -95,6 +95,18 @@ export const validateCreateProduct = [
       'beige'
     ])
     .withMessage('The product color entered is not valid'),
+  validateAllowedBodyParams([
+    'title',
+    'description',
+    'price',
+    'slug',
+    'category',
+    'brand',
+    'quantity',
+    'sold',
+    'images',
+    'color'
+  ]),
   (req: Request, res: Response, next: NextFunction) => {
     validateResult(req, res, next);
   }
@@ -122,13 +134,6 @@ export const validateUpdateProduct = [
     .not()
     .isEmpty()
     .withMessage('The product category must not be empty')
-    .isObject()
-    .withMessage('The product category must be an Object'),
-  check('category._id')
-    .optional()
-    .not()
-    .isEmpty()
-    .withMessage('The product categoryID must not be empty')
     .isMongoId()
     .withMessage('The product categoryID must be an ObjectId'),
   check('brand')
@@ -171,6 +176,13 @@ export const validateUpdateProduct = [
     .not()
     .isEmpty()
     .withMessage('The product color must not be empty')
+    .isArray()
+    .withMessage('The product color must be a string arrays'),
+  check('color.*')
+    .optional()
+    .not()
+    .isEmpty()
+    .withMessage('The product color must not be empty')
     .isIn([
       'black',
       'red',
@@ -193,6 +205,18 @@ export const validateUpdateProduct = [
       'beige'
     ])
     .withMessage('The product color entered is not valid'),
+  validateAllowedBodyParams([
+    'title',
+    'description',
+    'price',
+    'slug',
+    'category',
+    'brand',
+    'quantity',
+    'sold',
+    'images',
+    'color'
+  ]),
   (req: Request, res: Response, next: NextFunction) => {
     validateResult(req, res, next);
   }

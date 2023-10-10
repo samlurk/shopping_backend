@@ -22,22 +22,24 @@ export class PostService {
     this.userService = new UserService();
   }
 
-  async addPost(author: string, createPostDto: CreatePostDto): Promise<void> {
-    // if it finds the category, if it doesn't find it, it places a default one and if it doesn't exist, it throws an error.
+  async createOnePost(author: string, createPostDto: CreatePostDto): Promise<void> {
     const responseCategory = await this.categoryService.getAllCategories({
-      or: [{ _id: new ObjectId(createPostDto.category) }, { title: 'Uncategorized', type: Type.Post }],
+      or: [
+        { _id: new ObjectId(createPostDto.category), type: Type.Post },
+        { title: 'Uncategorized', type: Type.Post }
+      ],
       fields: '_id'
     });
     const category =
       responseCategory.length === 2
-        ? (responseCategory.find(({ _id }) => _id?.toString() === createPostDto.category) as CategoryModel)
+        ? (responseCategory.find(({ _id }) => _id?.equals(createPostDto.category)) as CategoryModel)
         : responseCategory[0];
     const responseUser = await this.userService.getOneUser({ _id: new ObjectId(author), fields: '_id' });
     const postModel = new PostModel(createPostDto, category, responseUser);
     await collections.posts.insertOne(postModel);
   }
 
-  async getPosts(reqQuery: object): Promise<PostModel[]> {
+  async getAllPosts(reqQuery: object): Promise<PostModel[]> {
     const { skip, limit, match, projection, sort } = handleReqQuery(reqQuery);
 
     const responsePost = await collections.posts
@@ -189,15 +191,15 @@ export class PostService {
       ])
       .toArray();
     if (responsePost.length === 0) throw notFound('post/all-posts/no-post-found');
-    await collections.posts?.updateMany(match, { $inc: { numViews: 1 }, $set: { updateAt: new Date() } });
+    await collections.posts.updateMany(match, { $inc: { numViews: 1 }, $set: { updateAt: new Date() } });
     return responsePost;
   }
 
-  async getPost(reqQuery: object): Promise<PostModel> {
+  async getOnePost(reqQuery: object): Promise<PostModel> {
     const { match, projection } = handleReqQuery(reqQuery);
 
-    const [responsePost] = (await collections.posts
-      ?.aggregate([
+    const [responsePost] = await collections.posts
+      .aggregate<PostModel>([
         { $match: match },
         {
           $lookup: {
@@ -340,45 +342,47 @@ export class PostService {
         },
         { $project: projection }
       ])
-      .toArray()) as PostModel[];
+      .toArray();
     if (responsePost === undefined) throw notFound('post/post-not-found');
-    await collections.posts?.updateOne(match, { $inc: { numViews: 1 }, $set: { updateAt: new Date() } });
+    await collections.posts.updateOne(match, { $inc: { numViews: 1 }, $set: { updateAt: new Date() } });
     return responsePost;
   }
 
-  async updatePost(postId: string, { category: postCategory, ...updatePostDto }: UpdatePostDto): Promise<void> {
-    let postToUpdate;
+  async updateOnePost(postId: string, { category: postCategory, ...updatePostDto }: UpdatePostDto): Promise<void> {
+    let postToUpdate = {};
     if (typeof postCategory === 'string') {
       await this.categoryService.getOneCategory({
-        _id: new ObjectId(postCategory)
+        _id: new ObjectId(postCategory),
+        type: Type.Post
       });
       postToUpdate = { ...updatePostDto, category: { _id: new ObjectId(postCategory) } };
     } else postToUpdate = { ...updatePostDto };
 
-    await collections.posts?.updateOne(
+    const responsePost = await collections.posts.updateOne(
       { _id: new ObjectId(postId) },
       { $set: { ...postToUpdate, updateAt: new Date() } }
     );
+    if (responsePost.modifiedCount === 0) throw notFound('post/edit-post/post-not-found');
   }
 
-  async deletePost(postId: string): Promise<void> {
-    const responsePost = await collections.posts?.deleteOne({
+  async deleteOnePost(postId: string): Promise<void> {
+    const responsePost = await collections.posts.deleteOne({
       _id: new ObjectId(postId)
     });
-    if (responsePost?.deletedCount === 0) throw notFound('post/post-not-found');
+    if (responsePost.deletedCount === 0) throw notFound('post/post-not-found');
   }
 
   async likePost(postId: string, userId: string): Promise<string> {
-    const { likes, dislikes, interactions } = await this.getPost({
+    const { likes, dislikes, interactions } = await this.getOnePost({
       _id: new ObjectId(postId)
     });
-    if (!interactions) throw notFound('Likes and dislikes are not enabled for this post');
+    if (!interactions) throw notFound('post/like/likes-are-not-enabled-for-this-post');
     const isLiked = likes.some((doc) => doc._id?.equals(userId));
     const isDisliked = dislikes.some((doc) => doc._id?.equals(userId));
 
     // If you have disliked
     if (isDisliked) {
-      await collections.posts?.updateOne(
+      await collections.posts.updateOne(
         { _id: new ObjectId(postId) },
         {
           $pull: { dislikes: { _id: new ObjectId(userId) } },
@@ -393,7 +397,7 @@ export class PostService {
 
     // If already liked
     if (isLiked) {
-      await collections.posts?.updateOne(
+      await collections.posts.updateOne(
         { _id: new ObjectId(postId) },
         {
           $pull: { likes: { _id: new ObjectId(userId) } },
@@ -407,7 +411,7 @@ export class PostService {
 
     // If you have not liked
     if (!isLiked) {
-      await collections.posts?.updateOne(
+      await collections.posts.updateOne(
         { _id: new ObjectId(postId) },
         {
           $push: { likes: { _id: new ObjectId(userId) } },
@@ -421,16 +425,16 @@ export class PostService {
   }
 
   async dislikePost(postId: string, userId: string): Promise<string> {
-    const { likes, dislikes, interactions } = await this.getPost({
+    const { likes, dislikes, interactions } = await this.getOnePost({
       _id: new ObjectId(postId)
     });
-    if (!interactions) throw notFound('Likes and dislikes are not enabled for this post');
+    if (!interactions) throw notFound('post/dislike/dislikes-are-not-enabled-for-this-post');
     const isLiked = likes.some((doc) => doc._id?.equals(userId));
     const isDisliked = dislikes.some((doc) => doc._id?.equals(userId));
 
     // If you have liked
     if (isLiked) {
-      await collections.posts?.updateOne(
+      await collections.posts.updateOne(
         { _id: new ObjectId(postId) },
         {
           $pull: { likes: { _id: new ObjectId(userId) } },
@@ -445,7 +449,7 @@ export class PostService {
 
     // If already disliked
     if (isDisliked) {
-      await collections.posts?.updateOne(
+      await collections.posts.updateOne(
         { _id: new ObjectId(postId) },
         {
           $pull: { dislikes: { _id: new ObjectId(userId) } },
@@ -459,7 +463,7 @@ export class PostService {
 
     // If you have not disliked
     if (!isDisliked) {
-      await collections.posts?.updateOne(
+      await collections.posts.updateOne(
         { _id: new ObjectId(postId) },
         {
           $push: { dislikes: { _id: new ObjectId(userId) } },

@@ -1,105 +1,275 @@
 import { collections } from '../config/mongo-collections.config';
-import { type DeleteResult, ObjectId, type InsertOneResult, type UpdateResult } from 'mongodb';
-import { forbidden, notFound, serverError } from '../helpers/APIResponse.handle';
+import { ObjectId } from 'mongodb';
+import { forbidden, notFound } from '../helpers/APIResponse.handle';
 import ProductModel from '../models/product.model';
 import type { CreateProductDto } from '../interfaces/product.interface';
-import type { ReqQueryPagination, ReqQueryDto } from '../interfaces/query.interface';
-import { handleReqQuery, limitingQueryByFields, sortingQueryByFields } from '../helpers/query.handle';
-import { Query } from '../enums/query.enum';
+import type { ReqQueryDto } from '../interfaces/query.interface';
+import { handleReqQuery } from '../helpers/query.handle';
+import CategoryService from './category.service';
+import { Type } from '../enums/category.enum';
+import type CategoryModel from '../models/category.model';
+import MongoDbService from './mongo.service';
+import type { UpdateProductDto } from '../types/product.type';
 
-// export class ProductService {
-//   async addProduct(
-//     { title, description, price, slug, brand, quantity, sold, images, color }: CreateProductDto,
-//     vendorId: string
-//   ): Promise<void> {
-//     const searchRequiredKeys = await this.checkProductUniqueKeys({ slug });
-//     if (searchRequiredKeys != null && searchRequiredKeys.slug === slug)
-//       throw forbidden('The registered slug already exists');
-//     const productModel = new ProductModel({
-//       title,
-//       description,
-//       price,
-//       slug,
-//       brand,
-//       quantity,
-//       sold,
-//       images,
-//       color
-//     });
-//     await collections.products?.insertOne(productModel);
-//   }
+export class ProductService {
+  mongoService: MongoDbService;
+  categoryService: CategoryService;
 
-//   async checkProductUniqueKeys({ slug }: Pick<Product, 'slug'>): Promise<Pick<Product, 'slug'> | null> {
-//     return (await collections.products?.findOne({ slug }, { projection: { slug: 1 } })) as Pick<Product, 'slug'> | null;
-//   }
+  constructor() {
+    this.mongoService = new MongoDbService();
+    this.categoryService = new CategoryService();
+  }
 
-//   async getProducts(vendorId: string, reqQuery: ReqQueryDto): Promise<Product[] | undefined> {
-//     const { skip, limit, match, project, sort } = handleReqQuery(reqQuery);
-//     const totalCount = await collections.products?.countDocuments();
-//     if (typeof totalCount === 'number' && skip >= totalCount) throw notFound('product/page-not-found');
+  async createOneProduct(vendorId: string, createProductDto: CreateProductDto): Promise<void> {
+    const isSlugAlreadyExists = await collections.products.findOne({ slug: createProductDto.slug });
+    if (isSlugAlreadyExists !== null) throw forbidden('product/product-slug-already-exists');
 
-//     const queryProduct = collections.products?.aggregate([
-//       { $sort: sort },
-//       { $skip: skip },
-//       { $limit: limit },
-//       {
-//         $match: {
-//           $and: [match, { createBy: new ObjectId(vendorId) }]
-//         }
-//       },
-//       {
-//         $lookup: {
-//           from: 'categories',
-//           localField: 'category._id',
-//           foreignField: '_id',
-//           as: 'category'
-//         }
-//       },
-//       { $unwind: '$category' },
-//       { $project: project }
-//     ]);
+    const responseCategory = await this.categoryService.getAllCategories({
+      or: [
+        { _id: new ObjectId(createProductDto.category), type: Type.Product },
+        { title: 'Uncategorized', type: Type.Product }
+      ],
+      fields: '_id'
+    });
 
-//     const responseProduct = (await queryProduct?.toArray()) as Product[] | undefined;
-//     if (responseProduct == null) throw notFound('No product registered');
-//     return responseProduct;
-//   }
+    const category =
+      responseCategory.length === 2
+        ? (responseCategory.find(({ _id }) => _id?.equals(createProductDto.category)) as CategoryModel)
+        : responseCategory[0];
 
-//   async getProduct(productId: string, vendorId: string): Promise<Product | undefined> {
-//     const [responseProduct] = (await collections.products
-//       ?.aggregate([
-//         {
-//           $match: {
-//             $and: [{ _id: new ObjectId(productId) }, { createBy: new ObjectId(vendorId) }]
-//           }
-//         },
-//         {
-//           $lookup: {
-//             from: 'categories',
-//             localField: 'category._id',
-//             foreignField: '_id',
-//             as: 'category'
-//           }
-//         },
-//         { $unwind: '$category' }
-//       ])
-//       .toArray()) as Product[];
-//     if (responseProduct == null) throw notFound('Product not found');
-//     return responseProduct;
-//   }
+    const vendor = { _id: new ObjectId(vendorId) };
+    const productModel = new ProductModel(createProductDto, vendor, category);
+    await collections.products.insertOne(productModel);
+  }
 
-//   async deleteProduct(productId: string, vendorId: string): Promise<void> {
-//     const responseProduct = await collections.products?.deleteOne({
-//       $and: [{ _id: new ObjectId(productId) }, { createBy: new ObjectId(vendorId) }]
-//     });
-//     if (responseProduct?.deletedCount === 0) throw notFound('Product not found');
-//   }
+  async getAllProducts(vendorId: string, reqQuery: object): Promise<ProductModel[]> {
+    const { skip, limit, match, projection, sort } = handleReqQuery(reqQuery);
 
-//   async updateProduct(productId: string, product: Product, vendorId: string): Promise<void> {
-//     product.updateAt = new Date();
-//     const responseProduct = await collections.products?.updateOne(
-//       { $and: [{ _id: new ObjectId(productId) }, { createBy: new ObjectId(vendorId) }] },
-//       { $set: product }
-//     );
-//     if (responseProduct?.matchedCount === 0) throw notFound('Product not found');
-//   }
-// }
+    const responseProduct = await collections.products
+      .aggregate<ProductModel>([
+        {
+          $match: {
+            $and: [match, { vendor: { _id: new ObjectId(vendorId) } }]
+          }
+        },
+        { $sort: sort },
+        { $skip: skip },
+        { $limit: limit },
+        {
+          $lookup: {
+            from: 'categories',
+            localField: 'category._id',
+            foreignField: '_id',
+            as: 'category'
+          }
+        },
+        { $unwind: '$category' },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'vendor._id',
+            foreignField: '_id',
+            as: 'vendor'
+          }
+        },
+        { $unwind: '$vendor' },
+        {
+          $addFields: {
+            vendor: {
+              $let: {
+                vars: {
+                  vendorArray: {
+                    $map: {
+                      input: { $objectToArray: '$vendor' },
+                      as: 'property',
+                      in: {
+                        $cond: {
+                          if: { $in: ['$$property.k', ['_id', 'firstName', 'lastName']] },
+                          then: ['$$property.k', '$$property.v'],
+                          else: null
+                        }
+                      }
+                    }
+                  }
+                },
+                in: {
+                  $arrayToObject: {
+                    $filter: {
+                      input: '$$vendorArray',
+                      as: 'property',
+                      cond: { $ne: ['$$property', null] }
+                    }
+                  }
+                }
+              }
+            },
+            category: {
+              $let: {
+                vars: {
+                  categoryArray: {
+                    $map: {
+                      input: { $objectToArray: '$category' },
+                      as: 'property',
+                      in: {
+                        $cond: {
+                          if: { $in: ['$$property.k', ['_id', 'title']] },
+                          then: ['$$property.k', '$$property.v'],
+                          else: null
+                        }
+                      }
+                    }
+                  }
+                },
+                in: {
+                  $arrayToObject: {
+                    $filter: {
+                      input: '$$categoryArray',
+                      as: 'property',
+                      cond: { $ne: ['$$property', null] }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        { $project: projection }
+      ])
+      .toArray();
+
+    if (responseProduct.length === 0) throw notFound('product/all-products/no-product-found');
+    return responseProduct;
+  }
+
+  async getOneProduct(vendorId: string, reqQuery: object): Promise<ProductModel> {
+    const { match, projection } = handleReqQuery(reqQuery);
+
+    const [responseProduct] = await collections.products
+      .aggregate<ProductModel>([
+        {
+          $match: {
+            $and: [match, { vendor: { _id: new ObjectId(vendorId) } }]
+          }
+        },
+        {
+          $lookup: {
+            from: 'categories',
+            localField: 'category._id',
+            foreignField: '_id',
+            as: 'category'
+          }
+        },
+        { $unwind: '$category' },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'vendor._id',
+            foreignField: '_id',
+            as: 'vendor'
+          }
+        },
+        { $unwind: '$vendor' },
+        {
+          $addFields: {
+            vendor: {
+              $let: {
+                vars: {
+                  vendorArray: {
+                    $map: {
+                      input: { $objectToArray: '$vendor' },
+                      as: 'property',
+                      in: {
+                        $cond: {
+                          if: { $in: ['$$property.k', ['_id', 'firstName', 'lastName']] },
+                          then: ['$$property.k', '$$property.v'],
+                          else: null
+                        }
+                      }
+                    }
+                  }
+                },
+                in: {
+                  $arrayToObject: {
+                    $filter: {
+                      input: '$$vendorArray',
+                      as: 'property',
+                      cond: { $ne: ['$$property', null] }
+                    }
+                  }
+                }
+              }
+            },
+            category: {
+              $let: {
+                vars: {
+                  categoryArray: {
+                    $map: {
+                      input: { $objectToArray: '$category' },
+                      as: 'property',
+                      in: {
+                        $cond: {
+                          if: { $in: ['$$property.k', ['_id', 'title']] },
+                          then: ['$$property.k', '$$property.v'],
+                          else: null
+                        }
+                      }
+                    }
+                  }
+                },
+                in: {
+                  $arrayToObject: {
+                    $filter: {
+                      input: '$$categoryArray',
+                      as: 'property',
+                      cond: { $ne: ['$$property', null] }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        { $project: projection }
+      ])
+      .toArray();
+    if (responseProduct === null) throw notFound('product/product-not-found');
+    return responseProduct;
+  }
+
+  async deleteOneProduct(productId: string, vendorId: string): Promise<void> {
+    const responseProduct = await collections.products.deleteOne({
+      $and: [{ _id: new ObjectId(productId) }, { vendor: { _id: new ObjectId(vendorId) } }]
+    });
+    if (responseProduct.deletedCount === 0) throw notFound('product/product-not-found');
+    await this.mongoService.remove(collections.products.collectionName, new ObjectId(productId));
+  }
+
+  async updateOneProduct(
+    productId: string,
+    vendorId: string,
+    { category: productCategory, slug: productSlug, ...updateProductDto }: UpdateProductDto
+  ): Promise<void> {
+    let productToUpdate;
+    productToUpdate = { ...updateProductDto };
+
+    if (productSlug !== undefined) {
+      const isSlugAlreadyExists = await collections.products.findOne({ slug: productSlug });
+      if (isSlugAlreadyExists !== null) throw forbidden('product/edit-product/product-slug-already-exists');
+      productToUpdate = { ...updateProductDto, slug: productSlug };
+    }
+
+    if (productCategory !== undefined) {
+      await this.categoryService.getOneCategory({
+        _id: new ObjectId(productCategory),
+        type: Type.Product
+      });
+      productToUpdate = { ...productToUpdate, category: { _id: new ObjectId(productCategory) } };
+    }
+
+    const responseProduct = await collections.products.updateOne(
+      { $and: [{ _id: new ObjectId(productId) }, { vendor: { _id: new ObjectId(vendorId) } }] },
+      { $set: { ...productToUpdate, updateAt: new Date() } }
+    );
+    if (responseProduct.matchedCount === 0) throw notFound('product/edit-product/product-not-found');
+  }
+}

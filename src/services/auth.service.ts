@@ -13,9 +13,9 @@ export class AuthService {
     this.userService = new UserService();
   }
 
-  async loginUser({ email, password }: CreateUserDto): Promise<string> {
-    const user = await this.userService.getOneUser({ email });
-    if (!(await verified(password, user.password))) throw badCredentials('auth/login/wrong-password');
+  async loginUser({ email: authEmail, password: authPassword }: CreateUserDto): Promise<string> {
+    const user = await this.userService.getOneUser({ email: authEmail });
+    if (!(await verified(authPassword, user.password))) throw badCredentials('auth/login/wrong-password');
     await collections.users.updateOne(
       { _id: user._id },
       { $set: { updateAt: new Date(), 'metadata.lastLogin': new Date() } }

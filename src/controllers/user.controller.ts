@@ -11,7 +11,7 @@ export class UserController {
   async createOne({ body }: Request<unknown, unknown, CreateUserDto>, res: Response): Promise<Response> {
     try {
       const userService = new UserService();
-      await userService.addUser(body);
+      await userService.createOneUser(body);
       const response = created('User created');
       return res.status(response.code).send(response);
     } catch (err) {
@@ -95,10 +95,10 @@ export class UserController {
     }
   }
 
-  async blockUser({ params: { id } }: Request, res: Response): Promise<Response> {
+  async blockOne({ params: { id } }: Request, res: Response): Promise<Response> {
     try {
       const userService = new UserService();
-      await userService.blockUser(id);
+      await userService.blockOneUser(id);
       const response = ok('User blocked');
       return res.status(response.code).send(response);
     } catch (err) {
@@ -111,10 +111,10 @@ export class UserController {
     }
   }
 
-  async unblockUser({ params: { id } }: Request, res: Response): Promise<Response> {
+  async unblockOne({ params: { id } }: Request, res: Response): Promise<Response> {
     try {
       const userService = new UserService();
-      await userService.unlockUser(id);
+      await userService.unblockOneUser(id);
       const response = ok('User unblocked');
       return res.status(response.code).send(response);
     } catch (err) {
@@ -130,7 +130,7 @@ export class UserController {
   async updatePassword({ user, body: { password, oldPassword } }: Request & ReqJwt, res: Response): Promise<Response> {
     try {
       const userService = new UserService();
-      await userService.updateUserPassword(user?._id, password, oldPassword);
+      await userService.updateOneUserPassword(user?._id, password, oldPassword);
       const response = ok('User password updated');
       return res.status(response.code).send(response);
     } catch (err) {
@@ -146,7 +146,7 @@ export class UserController {
   async forgotPassword({ body: { email } }: Request, res: Response): Promise<Response> {
     try {
       const userService = new UserService();
-      await userService.forgotUserPassword(email);
+      await userService.forgotOneUserPassword(email);
       const response = ok('Reset password email has been sent to your email successfully');
       return res.status(response.code).send(response);
     } catch (err) {
@@ -162,7 +162,7 @@ export class UserController {
   async resetPassword({ params: { token }, body: { password } }: Request, res: Response): Promise<Response> {
     try {
       const userService = new UserService();
-      await userService.resetUserPassword(token, password);
+      await userService.resetOneUserPassword(token, password);
       const response = ok('Password successfully reset');
       return res.status(response.code).send(response);
     } catch (err) {

@@ -32,7 +32,7 @@ export const authRoleMiddleware = (
     try {
       const user = req.user;
       if (user !== undefined && user.role === role) next();
-      else throw unauthorized('Access denied');
+      else throw unauthorized('auth/access-denied');
     } catch (err) {
       let typedError: HttpMessageResponse;
       if (err instanceof Error) {

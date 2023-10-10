@@ -13,7 +13,7 @@ export class PostController {
   async createOne({ user, body }: Request<unknown, unknown, CreatePostDto> & ReqJwt, res: Response): Promise<Response> {
     try {
       const postService = new PostService();
-      await postService.addPost(user?._id, body);
+      await postService.createOnePost(user?._id, body);
       const response = ok('Post created');
       return res.status(response.code).send(response);
     } catch (err) {
@@ -32,7 +32,7 @@ export class PostController {
   ): Promise<Response> {
     try {
       const postService = new PostService();
-      const response = ok('Posts received', await postService.getPosts(query));
+      const response = ok('Posts received', await postService.getAllPosts(query));
       return res.status(response.code).send(response);
     } catch (err) {
       let typedError: HttpMessageResponse;
@@ -50,7 +50,7 @@ export class PostController {
   ): Promise<Response> {
     try {
       const postService = new PostService();
-      const response = ok('Post received', await postService.getPost({ _id: new ObjectId(id), ...query }));
+      const response = ok('Post received', await postService.getOnePost({ _id: new ObjectId(id), ...query }));
       return res.status(response.code).send(response);
     } catch (err) {
       let typedError: HttpMessageResponse;
@@ -68,7 +68,7 @@ export class PostController {
   ): Promise<Response> {
     try {
       const postService = new PostService();
-      await postService.updatePost(id, body);
+      await postService.updateOnePost(id, body);
       const response = ok('Post updated');
       return res.status(response.code).send(response);
     } catch (err) {
@@ -84,7 +84,7 @@ export class PostController {
   async deleteOne({ params: { id } }: Request, res: Response): Promise<Response> {
     try {
       const postService = new PostService();
-      await postService.deletePost(id);
+      await postService.deleteOnePost(id);
       const response = deleted('Post removed');
       return res.status(response.code).send(response);
     } catch (err) {

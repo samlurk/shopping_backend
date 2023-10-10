@@ -1,5 +1,5 @@
 /* eslint-disable no-loops/no-loops */
-import { type Db, MongoClient, type Collection, type BSON, type ObjectId, PullOperator } from 'mongodb';
+import { type Db, MongoClient, type Collection, type BSON, type ObjectId } from 'mongodb';
 import type { MongoRemove } from '../interfaces/mongodb.interface';
 import { revertMongoObjectToArrayToUpdate } from '../helpers/mongo.handle';
 
