@@ -7,6 +7,7 @@ import MongoDbService from './services/mongo.service';
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
+const ENV = process.env.NODE_ENV ?? 'development';
 const mongoService = new MongoDbService();
 
 app.use(morgan('dev'));
@@ -20,7 +21,7 @@ void mongoService.connectDB();
 
 try {
   app.listen(PORT, () => {
-    console.log(`Server is running at port ${PORT}`);
+    console.log(`Server is running in ${ENV}  mode on port ${PORT}`);
   });
 } catch (e) {
   console.log(e);

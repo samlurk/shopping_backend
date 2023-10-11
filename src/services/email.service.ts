@@ -5,8 +5,8 @@ class EmailService {
 
   constructor() {
     this.transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
+      host: process.env.MAIL_HOST,
+      port: Number(process.env.MAIL_PORT),
       secure: false, // true for 465, false for other ports
       auth: {
         user: process.env.MAIL_ID, // generated ethereal user
@@ -17,7 +17,7 @@ class EmailService {
 
   async sendMail(to: string, subject: string, text: string, html: string): Promise<void> {
     const mailOptions = {
-      from: 'sebastianmarquez6a@gmail.com',
+      from: process.env.MAIL_ID,
       to,
       subject,
       text,

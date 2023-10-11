@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  backend:
+      container_name: shopping-backend-prod
+      depends_on:
+      - mongo
+      image: localhost:5000/shopping-prod
+      env_file: .env
+      ports:
+        - "3001:${PORT}"
+      networks:
+      - shopping
+  mongo:
+    container_name: shopping-db
+    image: mongo:4.4.6
+    restart: always
+    env_file: .env
+    ports:
+      - "27018:${DB_PORT}"
+    volumes:
+      - shopping-data:/data/db
+    networks:
+    - shopping
+volumes:
+  shopping-data:
+networks:
+  shopping:
+    external: true
