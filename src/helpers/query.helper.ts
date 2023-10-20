@@ -1,6 +1,6 @@
 import type { MongodbOPerators } from '../interfaces/mongodb.interface';
 import type { ReqQueryDto, ReqQueryPagination } from '../interfaces/query.interface';
-import { checkObjectIdOnAnObject } from './mongo.handle';
+import { checkObjectIdOnAnObject } from './mongo.helper';
 
 export const handleReqQuery = (reqQuery: Partial<ReqQueryDto>): MongodbOPerators => {
   //* Changing the data type of the comparison query operators value

@@ -1,21 +1,43 @@
 /* eslint-disable no-loops/no-loops */
 import { type Db, MongoClient, type Collection, type BSON, type ObjectId } from 'mongodb';
 import type { MongoRemove } from '../interfaces/mongodb.interface';
-import { revertMongoObjectToArrayToUpdate } from '../helpers/mongo.handle';
+import { revertMongoObjectToArrayToUpdate } from '../helpers/mongo.helper';
+import type UserModel from '../models/user.model';
+import type ProductModel from '../models/product.model';
+import type PostModel from '../models/post.model';
+import type CategoryModel from '../models/category.model';
+
+export interface Collections {
+  users: Collection<UserModel>;
+  products: Collection<ProductModel>;
+  posts: Collection<PostModel>;
+  categories: Collection<CategoryModel>;
+}
 
 export class MongoDbService {
-  private readonly client: MongoClient;
-  private readonly db: Db;
+  private readonly _client: MongoClient;
+  private readonly _db: Db;
+  private readonly _collections: Collections;
 
   constructor() {
-    this.client = new MongoClient(process.env.DB_CONN_STRING as string);
-    this.db = this.client.db(process.env.DB_NAME);
+    this._client = new MongoClient(process.env.DB_CONN_STRING as string);
+    this._db = this._client.db(process.env.DB_NAME);
+    this._collections = {
+      users: this.getCollection<UserModel>('users'),
+      products: this.getCollection<ProductModel>('products'),
+      posts: this.getCollection<PostModel>('posts'),
+      categories: this.getCollection<CategoryModel>('categories')
+    };
+  }
+
+  get Collections(): Collections {
+    return this._collections;
   }
 
   async connectDB(): Promise<void> {
     try {
-      await this.client.connect();
-      console.log(`Successfully connected to database: ${this.db.databaseName}`);
+      await this._client.connect();
+      console.log(`Successfully connected to database: ${this._db.databaseName}`);
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Error connecting to the database: ${error.message}`);
@@ -23,16 +45,26 @@ export class MongoDbService {
     }
   }
 
-  getCollection<T extends BSON.Document>(name: string): Collection<T> {
-    return this.db.collection<T>(name);
+  async closeDB(): Promise<void> {
+    try {
+      await this._client.close(true);
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Error closing the database: ${error.message}`);
+      }
+    }
   }
 
-  async remove(collectionName: string, _id: ObjectId): Promise<void> {
+  getCollection<T extends BSON.Document>(name: string): Collection<T> {
+    return this._db.collection<T>(name);
+  }
+
+  async removeAllReferences(collectionName: string, _id: ObjectId): Promise<void> {
     try {
-      const collections = await this.db.listCollections().toArray();
+      const collections = await this._db.listCollections().toArray();
       for (let i = 0; i < collections.length; i++) {
         if (collections[i].name !== collectionName) {
-          const response = await this.db
+          const response = await this._db
             .collection(collections[i].name)
             .aggregate<MongoRemove>([
               {

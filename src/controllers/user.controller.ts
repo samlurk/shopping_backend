@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { UserService } from '../services/user.service';
-import { created, ok, deleted, serverError } from '../helpers/APIResponse.handle';
+import { created, ok, deleted, serverError } from '../helpers/api-response.helper';
 import type { HttpMessageResponse } from '../interfaces/httpMessageResponse.interface';
 import type { CreateUserDto, ReqJwt } from '../interfaces/user.interface';
 import type { ParamsDictionary } from 'express-serve-static-core';

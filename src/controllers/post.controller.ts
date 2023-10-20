@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { deleted, ok, serverError } from '../helpers/APIResponse.handle';
+import { deleted, ok, serverError } from '../helpers/api-response.helper';
 import type { HttpMessageResponse } from '../interfaces/httpMessageResponse.interface';
 import type { ReqJwt } from '../interfaces/user.interface';
 import { PostService } from '../services/post.service';

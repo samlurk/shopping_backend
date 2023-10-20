@@ -1,6 +1,6 @@
 import type { Response, Request } from 'express';
 import type { ReqJwt } from '../interfaces/user.interface';
-import { created, ok, deleted, serverError } from '../helpers/APIResponse.handle';
+import { created, ok, deleted, serverError } from '../helpers/api-response.helper';
 import type { HttpMessageResponse } from '../interfaces/httpMessageResponse.interface';
 import type { ReqQueryDto } from '../interfaces/query.interface';
 import { ProductService } from '../services/product.service';

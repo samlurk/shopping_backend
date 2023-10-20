@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { body } from 'express-validator';
-import { validateAllowedBodyParams, validateResult } from '../helpers/validate.handle';
+import { validateAllowedBodyParams, validateResult } from '../helpers/validate.helper';
 import { Type } from '../enums/category.enum';
 
 export const validateCreateCategory = [

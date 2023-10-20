@@ -1,10 +1,8 @@
-import { collections } from '../config/mongo-collections.config';
 import { ObjectId } from 'mongodb';
-import { forbidden, notFound } from '../helpers/APIResponse.handle';
+import { forbidden, notFound } from '../helpers/api-response.helper';
 import ProductModel from '../models/product.model';
 import type { CreateProductDto } from '../interfaces/product.interface';
-import type { ReqQueryDto } from '../interfaces/query.interface';
-import { handleReqQuery } from '../helpers/query.handle';
+import { handleReqQuery } from '../helpers/query.helper';
 import CategoryService from './category.service';
 import { Type } from '../enums/category.enum';
 import type CategoryModel from '../models/category.model';
@@ -12,16 +10,15 @@ import MongoDbService from './mongo.service';
 import type { UpdateProductDto } from '../types/product.type';
 
 export class ProductService {
-  mongoService: MongoDbService;
   categoryService: CategoryService;
 
   constructor() {
-    this.mongoService = new MongoDbService();
     this.categoryService = new CategoryService();
   }
 
   async createOneProduct(vendorId: string, createProductDto: CreateProductDto): Promise<void> {
-    const isSlugAlreadyExists = await collections.products.findOne({ slug: createProductDto.slug });
+    const mongoDbService = new MongoDbService();
+    const isSlugAlreadyExists = await mongoDbService.Collections.products.findOne({ slug: createProductDto.slug });
     if (isSlugAlreadyExists !== null) throw forbidden('product/product-slug-already-exists');
 
     const responseCategory = await this.categoryService.getAllCategories({
@@ -39,13 +36,15 @@ export class ProductService {
 
     const vendor = { _id: new ObjectId(vendorId) };
     const productModel = new ProductModel(createProductDto, vendor, category);
-    await collections.products.insertOne(productModel);
+    await mongoDbService.Collections.products.insertOne(productModel);
+    await mongoDbService.closeDB();
   }
 
   async getAllProducts(vendorId: string, reqQuery: object): Promise<ProductModel[]> {
+    const mongoDbService = new MongoDbService();
     const { skip, limit, match, projection, sort } = handleReqQuery(reqQuery);
 
-    const responseProduct = await collections.products
+    const responseProduct = await mongoDbService.Collections.products
       .aggregate<ProductModel>([
         {
           $match: {
@@ -138,13 +137,15 @@ export class ProductService {
       .toArray();
 
     if (responseProduct.length === 0) throw notFound('product/all-products/no-product-found');
+    await mongoDbService.closeDB();
     return responseProduct;
   }
 
   async getOneProduct(vendorId: string, reqQuery: object): Promise<ProductModel> {
+    const mongoDbService = new MongoDbService();
     const { match, projection } = handleReqQuery(reqQuery);
 
-    const [responseProduct] = await collections.products
+    const [responseProduct] = await mongoDbService.Collections.products
       .aggregate<ProductModel>([
         {
           $match: {
@@ -233,15 +234,21 @@ export class ProductService {
       ])
       .toArray();
     if (responseProduct === null) throw notFound('product/product-not-found');
+    await mongoDbService.closeDB();
     return responseProduct;
   }
 
   async deleteOneProduct(productId: string, vendorId: string): Promise<void> {
-    const responseProduct = await collections.products.deleteOne({
+    const mongoDbService = new MongoDbService();
+    const responseProduct = await mongoDbService.Collections.products.deleteOne({
       $and: [{ _id: new ObjectId(productId) }, { vendor: { _id: new ObjectId(vendorId) } }]
     });
     if (responseProduct.deletedCount === 0) throw notFound('product/product-not-found');
-    await this.mongoService.remove(collections.products.collectionName, new ObjectId(productId));
+    await mongoDbService.removeAllReferences(
+      mongoDbService.Collections.products.collectionName,
+      new ObjectId(productId)
+    );
+    await mongoDbService.closeDB();
   }
 
   async updateOneProduct(
@@ -249,11 +256,12 @@ export class ProductService {
     vendorId: string,
     { category: productCategory, slug: productSlug, ...updateProductDto }: UpdateProductDto
   ): Promise<void> {
+    const mongoDbService = new MongoDbService();
     let productToUpdate;
     productToUpdate = { ...updateProductDto };
 
     if (productSlug !== undefined) {
-      const isSlugAlreadyExists = await collections.products.findOne({ slug: productSlug });
+      const isSlugAlreadyExists = await mongoDbService.Collections.products.findOne({ slug: productSlug });
       if (isSlugAlreadyExists !== null) throw forbidden('product/edit-product/product-slug-already-exists');
       productToUpdate = { ...updateProductDto, slug: productSlug };
     }
@@ -266,10 +274,11 @@ export class ProductService {
       productToUpdate = { ...productToUpdate, category: { _id: new ObjectId(productCategory) } };
     }
 
-    const responseProduct = await collections.products.updateOne(
+    const responseProduct = await mongoDbService.Collections.products.updateOne(
       { $and: [{ _id: new ObjectId(productId) }, { vendor: { _id: new ObjectId(vendorId) } }] },
       { $set: { ...productToUpdate, updateAt: new Date() } }
     );
     if (responseProduct.matchedCount === 0) throw notFound('product/edit-product/product-not-found');
+    await mongoDbService.closeDB();
   }
 }

@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { check } from 'express-validator';
-import { validateAllowedBodyParams, validateResult } from '../helpers/validate.handle';
+import { validateAllowedBodyParams, validateResult } from '../helpers/validate.helper';
 
 export const validateCreateProduct = [
   check('title').exists().not().isEmpty().withMessage('The product name must not be empty'),

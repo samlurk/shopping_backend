@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
-import { forbidden, serverError } from './APIResponse.handle';
+import { forbidden, serverError } from './api-response.helper';
 import type { HttpMessageResponse } from '../interfaces/httpMessageResponse.interface';
 
 export const validateResult = (req: Request, res: Response, next: NextFunction): Response | undefined => {

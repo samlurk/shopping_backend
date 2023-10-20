@@ -1,18 +1,16 @@
 import { Router } from 'express';
-import { readDir } from '../helpers/dynamic.import.handle';
+import authRoutes from './auth.route';
+import userRoutes from './user.route';
+import categoryRoutes from './category.route';
+import productRoutes from './product.route';
+import postRoutes from './post.route';
 
 const router = Router();
 
-(async () => {
-  (await readDir(__dirname).then((value) => {
-    const files = value;
-    files.filter(async (file) => {
-      await import(`./${file}.route`).then((moduleRouter) => {
-        console.log(`Route /${file} is loading...`);
-        router.use(`/${file}`, moduleRouter.router);
-      });
-    });
-  })) as string[];
-})().catch((err) => err);
+router.use('/auth', authRoutes);
+router.use('/user', userRoutes);
+router.use('/category', categoryRoutes);
+router.use('/product', productRoutes);
+router.use('/post', postRoutes);
 
-export { router };
+export default router;

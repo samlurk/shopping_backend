@@ -24,4 +24,4 @@ router.delete('/:id', authSessionMiddleware, authRoleMiddleware(Role.Admin), val
 
 router.put('/like', authSessionMiddleware, authRoleMiddleware(Role.Admin), validatePostId, likePost);
 router.put('/dislike', authSessionMiddleware, authRoleMiddleware(Role.Admin), validatePostId, dislikePost);
-export { router };
+export default router;

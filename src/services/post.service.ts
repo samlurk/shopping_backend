@@ -1,28 +1,26 @@
 import { ObjectId } from 'mongodb';
-import { collections } from '../config/mongo-collections.config';
-import { notFound } from '../helpers/APIResponse.handle';
+import { notFound } from '../helpers/api-response.helper';
 import type { CreatePostDto } from '../interfaces/post.interface';
 import PostModel from '../models/post.model';
 import CategoryService from './category.service';
 import { Type } from '../enums/category.enum';
 import { UserService } from './user.service';
 import type CategoryModel from '../models/category.model';
-import { handleReqQuery } from '../helpers/query.handle';
+import { handleReqQuery } from '../helpers/query.helper';
 import type { UpdatePostDto } from '../types/post.type';
 import MongoDbService from './mongo.service';
 
 export class PostService {
-  mongoService: MongoDbService;
   categoryService: CategoryService;
   userService: UserService;
 
   constructor() {
-    this.mongoService = new MongoDbService();
     this.categoryService = new CategoryService();
     this.userService = new UserService();
   }
 
   async createOnePost(author: string, createPostDto: CreatePostDto): Promise<void> {
+    const mongoDbService = new MongoDbService();
     const responseCategory = await this.categoryService.getAllCategories({
       or: [
         { _id: new ObjectId(createPostDto.category), type: Type.Post },
@@ -36,13 +34,15 @@ export class PostService {
         : responseCategory[0];
     const responseUser = await this.userService.getOneUser({ _id: new ObjectId(author), fields: '_id' });
     const postModel = new PostModel(createPostDto, category, responseUser);
-    await collections.posts.insertOne(postModel);
+    await mongoDbService.Collections.posts.insertOne(postModel);
+    await mongoDbService.closeDB();
   }
 
   async getAllPosts(reqQuery: object): Promise<PostModel[]> {
+    const mongoDbService = new MongoDbService();
     const { skip, limit, match, projection, sort } = handleReqQuery(reqQuery);
 
-    const responsePost = await collections.posts
+    const responsePost = await mongoDbService.Collections.posts
       .aggregate<PostModel>([
         { $match: match },
         { $sort: sort },
@@ -191,14 +191,19 @@ export class PostService {
       ])
       .toArray();
     if (responsePost.length === 0) throw notFound('post/all-posts/no-post-found');
-    await collections.posts.updateMany(match, { $inc: { numViews: 1 }, $set: { updateAt: new Date() } });
+    await mongoDbService.Collections.posts.updateMany(match, {
+      $inc: { numViews: 1 },
+      $set: { updateAt: new Date() }
+    });
+    await mongoDbService.closeDB();
     return responsePost;
   }
 
   async getOnePost(reqQuery: object): Promise<PostModel> {
+    const mongoDbService = new MongoDbService();
     const { match, projection } = handleReqQuery(reqQuery);
 
-    const [responsePost] = await collections.posts
+    const [responsePost] = await mongoDbService.Collections.posts
       .aggregate<PostModel>([
         { $match: match },
         {
@@ -344,11 +349,16 @@ export class PostService {
       ])
       .toArray();
     if (responsePost === undefined) throw notFound('post/post-not-found');
-    await collections.posts.updateOne(match, { $inc: { numViews: 1 }, $set: { updateAt: new Date() } });
+    await mongoDbService.Collections.posts.updateOne(match, {
+      $inc: { numViews: 1 },
+      $set: { updateAt: new Date() }
+    });
+    await mongoDbService.closeDB();
     return responsePost;
   }
 
   async updateOnePost(postId: string, { category: postCategory, ...updatePostDto }: UpdatePostDto): Promise<void> {
+    const mongoDbService = new MongoDbService();
     let postToUpdate = {};
     if (typeof postCategory === 'string') {
       await this.categoryService.getOneCategory({
@@ -358,21 +368,25 @@ export class PostService {
       postToUpdate = { ...updatePostDto, category: { _id: new ObjectId(postCategory) } };
     } else postToUpdate = { ...updatePostDto };
 
-    const responsePost = await collections.posts.updateOne(
+    const responsePost = await mongoDbService.Collections.posts.updateOne(
       { _id: new ObjectId(postId) },
       { $set: { ...postToUpdate, updateAt: new Date() } }
     );
     if (responsePost.modifiedCount === 0) throw notFound('post/edit-post/post-not-found');
+    await mongoDbService.closeDB();
   }
 
   async deleteOnePost(postId: string): Promise<void> {
-    const responsePost = await collections.posts.deleteOne({
+    const mongoDbService = new MongoDbService();
+    const responsePost = await mongoDbService.Collections.posts.deleteOne({
       _id: new ObjectId(postId)
     });
     if (responsePost.deletedCount === 0) throw notFound('post/post-not-found');
+    await mongoDbService.closeDB();
   }
 
   async likePost(postId: string, userId: string): Promise<string> {
+    const mongoDbService = new MongoDbService();
     const { likes, dislikes, interactions } = await this.getOnePost({
       _id: new ObjectId(postId)
     });
@@ -382,7 +396,7 @@ export class PostService {
 
     // If you have disliked
     if (isDisliked) {
-      await collections.posts.updateOne(
+      await mongoDbService.Collections.posts.updateOne(
         { _id: new ObjectId(postId) },
         {
           $pull: { dislikes: { _id: new ObjectId(userId) } },
@@ -397,7 +411,7 @@ export class PostService {
 
     // If already liked
     if (isLiked) {
-      await collections.posts.updateOne(
+      await mongoDbService.Collections.posts.updateOne(
         { _id: new ObjectId(postId) },
         {
           $pull: { likes: { _id: new ObjectId(userId) } },
@@ -411,7 +425,7 @@ export class PostService {
 
     // If you have not liked
     if (!isLiked) {
-      await collections.posts.updateOne(
+      await mongoDbService.Collections.posts.updateOne(
         { _id: new ObjectId(postId) },
         {
           $push: { likes: { _id: new ObjectId(userId) } },
@@ -421,10 +435,12 @@ export class PostService {
         }
       );
     }
+    await mongoDbService.closeDB();
     return 'Post liked';
   }
 
   async dislikePost(postId: string, userId: string): Promise<string> {
+    const mongoDbService = new MongoDbService();
     const { likes, dislikes, interactions } = await this.getOnePost({
       _id: new ObjectId(postId)
     });
@@ -434,7 +450,7 @@ export class PostService {
 
     // If you have liked
     if (isLiked) {
-      await collections.posts.updateOne(
+      await mongoDbService.Collections.posts.updateOne(
         { _id: new ObjectId(postId) },
         {
           $pull: { likes: { _id: new ObjectId(userId) } },
@@ -449,7 +465,7 @@ export class PostService {
 
     // If already disliked
     if (isDisliked) {
-      await collections.posts.updateOne(
+      await mongoDbService.Collections.posts.updateOne(
         { _id: new ObjectId(postId) },
         {
           $pull: { dislikes: { _id: new ObjectId(userId) } },
@@ -463,7 +479,7 @@ export class PostService {
 
     // If you have not disliked
     if (!isDisliked) {
-      await collections.posts.updateOne(
+      await mongoDbService.Collections.posts.updateOne(
         { _id: new ObjectId(postId) },
         {
           $push: { dislikes: { _id: new ObjectId(userId) } },
@@ -473,6 +489,7 @@ export class PostService {
         }
       );
     }
+    await mongoDbService.closeDB();
     return 'Post disliked';
   }
 }

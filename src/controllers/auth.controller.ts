@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
-import { ok } from '../helpers/APIResponse.handle';
+import { ok, serverError } from '../helpers/api-response.helper';
 import type { HttpMessageResponse } from '../interfaces/httpMessageResponse.interface';
 
 export class AuthController<T extends Request, U extends Response> {
@@ -12,7 +12,11 @@ export class AuthController<T extends Request, U extends Response> {
       res.cookie('token', token, { httpOnly: true });
       return res.status(response.code).send(response);
     } catch (err) {
-      const typedError = err as HttpMessageResponse;
+      let typedError: HttpMessageResponse;
+      if (err instanceof Error) {
+        typedError = serverError(err.message);
+        return res.status(typedError.code).send(typedError);
+      } else typedError = err as HttpMessageResponse;
       return res.status(typedError.code).send(typedError);
     }
   }

@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { type JwtPayload, sign, verify, decode } from 'jsonwebtoken';
-import { unauthorized } from './APIResponse.handle';
+import { unauthorized } from './api-response.helper';
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
 // Generate a JWT token for a given payload and secret

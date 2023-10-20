@@ -22,4 +22,4 @@ router.put(
 );
 router.delete('/:id', authSessionMiddleware, authRoleMiddleware(Role.Admin), validateId, deleteOne);
 
-export { router };
+export default router;

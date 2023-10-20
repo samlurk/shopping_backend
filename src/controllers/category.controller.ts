@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { deleted, ok, serverError } from '../helpers/APIResponse.handle';
+import { deleted, ok, serverError } from '../helpers/api-response.helper';
 import type { HttpMessageResponse } from '../interfaces/httpMessageResponse.interface';
 import CategoryService from '../services/category.service';
 import type { CreateCategoryDto } from '../interfaces/category.interface';

@@ -26,3 +26,10 @@ dist-ssr
 # Files
 uploads
 .env
+
+# Testing
+coverage
+jest.config.json
+
+# Mongo In Memory
+https:

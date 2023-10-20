@@ -52,4 +52,4 @@ router.post('/reset-password/:token', validateResetUserPassword, resetPassword);
 
 router.put('/password', authSessionMiddleware, validateChangeUserPassword, updatePassword);
 
-export { router };
+export default router;

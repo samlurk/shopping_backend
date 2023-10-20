@@ -1,8 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
 import { type Role } from '../enums/user.enum';
 import type { ReqJwt } from '../interfaces/user.interface';
-import { serverError, unauthorized } from '../helpers/APIResponse.handle';
-import { verifyToken } from '../helpers/jwt.handle';
+import { serverError, unauthorized } from '../helpers/api-response.helper';
+import { verifyToken } from '../helpers/jwt.helper';
 import { type HttpMessageResponse } from '../interfaces/httpMessageResponse.interface';
 import type { UserSession } from '../types/user.type';
 

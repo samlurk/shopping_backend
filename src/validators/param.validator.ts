@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { param } from 'express-validator';
-import { validateResult } from '../helpers/validate.handle';
+import { validateResult } from '../helpers/validate.helper';
 
 export const validateId = [
   param('id')

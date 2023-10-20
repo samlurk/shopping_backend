@@ -26,4 +26,4 @@ router.put(
 
 router.delete('/:id', authSessionMiddleware, authRoleMiddleware(Role.Admin), validateId, deleteOneCategory);
 
-export { router };
+export default router;
