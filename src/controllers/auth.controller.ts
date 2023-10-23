@@ -3,11 +3,32 @@ import { AuthService } from '../services/auth.service';
 import { ok, serverError } from '../helpers/api-response.helper';
 import type { HttpMessageResponse } from '../interfaces/httpMessageResponse.interface';
 
-export class AuthController<T extends Request, U extends Response> {
-  async login({ body }: T, res: U): Promise<U> {
+export class AuthController {
+  authService: AuthService;
+
+  constructor() {
+    this.authService = new AuthService();
+  }
+
+  async signup({ body }: Request, res: Response): Promise<Response> {
     try {
-      const auth = new AuthService();
-      const token = await auth.loginUser(body);
+      const token = this.authService.signupUser(body);
+      const response = ok('User successfully sign in', token);
+      res.cookie('token', token, { httpOnly: true });
+      return res.status(response.code).send(response);
+    } catch (err) {
+      let typedError: HttpMessageResponse;
+      if (err instanceof Error) {
+        typedError = serverError(err.message);
+        return res.status(typedError.code).send(typedError);
+      } else typedError = err as HttpMessageResponse;
+      return res.status(typedError.code).send(typedError);
+    }
+  }
+
+  async login({ body }: Request, res: Response): Promise<Response> {
+    try {
+      const token = await this.authService.loginUser(body);
       const response = ok('User successfully logged in', token);
       res.cookie('token', token, { httpOnly: true });
       return res.status(response.code).send(response);
@@ -21,7 +42,7 @@ export class AuthController<T extends Request, U extends Response> {
     }
   }
 
-  logout(_: T, res: U): U {
+  logout(_: Request, res: Response): Response {
     res.clearCookie('token', {
       httpOnly: true,
       secure: true

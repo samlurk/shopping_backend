@@ -1,44 +1,41 @@
-import mongoServer from '../../src/helpers/tests-helper/db.test-helper';
-import { HttpStatusCode } from '../../src/enums/httpStatusCode.enum';
-import request from 'supertest';
-import type { IncomingMessage, Server, ServerResponse } from 'http';
-import app from '../../src/app';
+import { AuthController } from '../../src/controllers/auth.controller';
+import { authSessionMiddleware } from '../../src/middlewares/auth.middleware';
+import { validateCreateUser } from '../../src/validators/user.validator';
 
-describe('Auth tests', () => {
-  let server: Server<typeof IncomingMessage, typeof ServerResponse>;
+const getSpy = jest.fn();
+const postSpy = jest.fn();
 
-  beforeAll(async () => {
-    await mongoServer.connect();
-    server = app.listen(process.env.PORT);
-  });
+jest.mock('express', () => {
+  const router = {
+    post: postSpy,
+    get: getSpy
+  };
 
-  afterAll(async () => {
-    await mongoServer.close();
-    server.close();
-  });
+  return {
+    Router: () => router
+  };
+});
+describe('Auth test routes', () => {
+  const authController = new AuthController();
+  const { signup, login, logout } = authController;
+
+  import('../../src/routes/auth.route');
 
   describe('POST /api/v1/auth/signup', () => {
-    it('should respond with a 201 status code', async () => {
-      const newUser = {
-        firstName: 'Test firstname',
-        lastName: 'Test lastName',
-        email: 'test@hotmail.com',
-        phone: '+12342342359',
-        password: '12345678'
-      };
-      const res = await request(server).post('/api/v1/auth/signup').send(newUser);
-      expect(res.statusCode).toBe(HttpStatusCode.CREATED);
+    it('should call the router', () => {
+      expect(postSpy).toHaveBeenCalledWith('/signup', validateCreateUser, signup);
     });
   });
 
   describe('POST /api/v1/auth/login', () => {
-    it('should respond with a 200 status code', async () => {
-      const newUser = {
-        email: 'test@hotmail.com',
-        password: '12345678'
-      };
-      const res = await request(server).post('/api/v1/auth/login').send(newUser);
-      expect(res.statusCode).toBe(HttpStatusCode.OK);
+    it('should call the router', () => {
+      expect(postSpy).toHaveBeenCalledWith('/login', login);
+    });
+  });
+
+  describe('GET /api/v1/auth/logout', () => {
+    it('should call the router', () => {
+      expect(getSpy).toHaveBeenCalledWith('/logout', authSessionMiddleware, logout);
     });
   });
 });

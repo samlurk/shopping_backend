@@ -1,10 +1,10 @@
 import type { Request, Response, NextFunction } from 'express';
 import { type Role } from '../enums/user.enum';
-import type { ReqJwt } from '../interfaces/user.interface';
+import type { ReqJwt } from '../interfaces/auth.interface';
 import { serverError, unauthorized } from '../helpers/api-response.helper';
 import { verifyToken } from '../helpers/jwt.helper';
 import { type HttpMessageResponse } from '../interfaces/httpMessageResponse.interface';
-import type { UserSession } from '../types/user.type';
+import type { UserSession } from '../types/auth.type';
 
 export const authSessionMiddleware = async (
   req: Request & ReqJwt,

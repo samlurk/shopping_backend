@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "test": "jest --coverage --detectOpenHandles",
+    "test": "jest --coverage --watchAll --detectOpenHandles",
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node-dev src/index.ts",

@@ -1,15 +1,14 @@
-import { Router, type Request, type Response } from 'express';
-import { UserController } from '../controllers/user.controller';
+import { Router } from 'express';
 import { AuthController } from '../controllers/auth.controller';
 import { validateCreateUser } from '../validators/user.validator';
 import { authSessionMiddleware } from '../middlewares/auth.middleware';
 
 const router = Router();
 
-const { createOne } = new UserController();
-const { login, logout } = new AuthController<Request, Response>();
+const authController = new AuthController();
+const { login, logout, signup } = authController;
 
-router.post('/signup', validateCreateUser, createOne);
+router.post('/signup', validateCreateUser, signup);
 router.post('/login', login);
 router.get('/logout', authSessionMiddleware, logout);
 
