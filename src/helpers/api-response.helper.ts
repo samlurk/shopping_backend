@@ -45,7 +45,7 @@ export const ok = (message: string, data?: unknown): HttpMessageResponse => {
   return response;
 };
 
-export const badRequest = (message: string, data?: string): HttpMessageResponse => {
+export const badRequest = (message: string, data?: unknown): HttpMessageResponse => {
   let response;
   if (data != null) {
     response = {
@@ -121,7 +121,7 @@ export const deleted = (message: string): HttpMessageResponse => {
   return response;
 };
 
-export const serverError = (message: string): HttpMessageResponse => {
+export const serverError = (message = 'Internal Server Error'): HttpMessageResponse => {
   const response = {
     key: 'SERVER_ERROR',
     error: message,

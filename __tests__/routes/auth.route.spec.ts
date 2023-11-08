@@ -1,4 +1,4 @@
-import { AuthController } from '../../src/controllers/auth.controller';
+import AuthController from '../../src/controllers/auth.controller';
 import { authSessionMiddleware } from '../../src/middlewares/auth.middleware';
 import { validateCreateUser } from '../../src/validators/user.validator';
 
@@ -15,6 +15,7 @@ jest.mock('express', () => {
     Router: () => router
   };
 });
+
 describe('Auth test routes', () => {
   const authController = new AuthController();
   const { signup, login, logout } = authController;

@@ -21,8 +21,8 @@ export class UserService {
     );
     if (isExists !== null) {
       const { email, phone } = isExists;
-      if (createUserDto.email === email) throw forbidden('user/user-email-already-exists');
-      if (createUserDto.phone === phone) throw forbidden('user/user-phone-already-exists');
+      if (createUserDto.email === email) throw forbidden('user/user-email-already-exists', createUserDto);
+      if (createUserDto.phone === phone) throw forbidden('user/user-phone-already-exists', createUserDto);
     }
 
     createUserDto.password = await encrypt(createUserDto.password);

@@ -174,6 +174,19 @@ export class MongoDbService {
       }
     }
   }
-}
 
+  async clearDB(): Promise<void> {
+    try {
+      const collections = await this._db.listCollections().toArray();
+      for (let i = 0; i < collections.length; i++) {
+        const collection = this.getCollection(collections[i].name);
+        await collection.deleteMany({});
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Error removing documents from database ${error.message}`);
+      }
+    }
+  }
+}
 export default MongoDbService;
