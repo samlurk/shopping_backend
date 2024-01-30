@@ -1,5 +1,13 @@
 /* eslint-disable no-loops/no-loops */
-import { type Db, MongoClient, type Collection, type BSON, type ObjectId } from 'mongodb';
+import {
+  type Db,
+  MongoClient,
+  type Collection,
+  type BSON,
+  ObjectId,
+  type DeleteResult,
+  type UpdateResult
+} from 'mongodb';
 import type { MongoRemove } from '../interfaces/mongodb.interface';
 import { revertMongoObjectToArrayToUpdate } from '../helpers/mongo.helper';
 import type UserModel from '../models/user.model';
@@ -34,24 +42,31 @@ export class MongoDbService {
     return this._collections;
   }
 
+  get Client(): MongoClient {
+    return this._client;
+  }
+
+  get Db(): MongoDbService['_db'] {
+    return this._db;
+  }
+
   async connectDB(): Promise<void> {
     try {
       await this._client.connect();
       console.log(`Successfully connected to database: ${this._db.databaseName}`);
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(`Error connecting to the database: ${error.message}`);
-      }
+    } catch (e) {
+      const error = e as Error;
+      throw new Error(`Error connecting to the database: ${error.message}`);
     }
   }
 
   async closeDB(): Promise<void> {
     try {
       await this._client.close(true);
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(`Error closing the database: ${error.message}`);
-      }
+      console.log(`Database successfully closed: ${this._db.databaseName}`);
+    } catch (e) {
+      const error = e as Error;
+      throw new Error(`Error closing the database: ${error.message}`);
     }
   }
 
@@ -59,9 +74,20 @@ export class MongoDbService {
     return this._db.collection<T>(name);
   }
 
-  async removeAllReferences(collectionName: string, _id: ObjectId): Promise<void> {
+  async removeAllReferences(
+    collectionName: string,
+    _id: ObjectId
+  ): Promise<{ deleteResult: DeleteResult; updateResult: UpdateResult }> {
     try {
       const collections = await this._db.listCollections().toArray();
+      let deleteResult: DeleteResult = { acknowledged: true, deletedCount: 0 };
+      let updateResult: UpdateResult = {
+        acknowledged: true,
+        matchedCount: 0,
+        modifiedCount: 0,
+        upsertedCount: 0,
+        upsertedId: new ObjectId()
+      };
       for (let i = 0; i < collections.length; i++) {
         if (collections[i].name !== collectionName) {
           const response = await this._db
@@ -149,43 +175,62 @@ export class MongoDbService {
               return acc;
             }, {});
             if (countMatches === 1) {
-              await this.getCollection(collections[i].name).deleteOne({ ...objectToMatch });
+              const userResponse = await this.getCollection(collections[i].name).deleteOne({ ...objectToMatch });
+              deleteResult = {
+                acknowledged: deleteResult.acknowledged && userResponse.acknowledged,
+                deletedCount: deleteResult.deletedCount + userResponse.deletedCount
+              };
             }
             if (countMatches > 1) {
-              await this.getCollection(collections[i].name).deleteMany({ ...objectToMatch });
+              // we acc the number of times it eliminates references
+              const userResponseDeleted = await this.getCollection(collections[i].name).deleteMany({
+                ...objectToMatch
+              });
+              deleteResult = {
+                acknowledged: deleteResult.acknowledged && userResponseDeleted.acknowledged,
+                deletedCount: deleteResult.deletedCount + userResponseDeleted.deletedCount
+              };
             }
             // documents matching the object are removed (relation n-n)
             const { $or, $pull } = revertMongoObjectToArrayToUpdate(response, _id);
             if ($or.length !== 0 && Object.keys($pull).length !== 0) {
-              await this.getCollection(collections[i].name).updateMany(
+              // we acc the number of times it updates references
+              const userResponseUpdated = await this.getCollection(collections[i].name).updateMany(
                 { $or },
                 {
                   $pull,
                   $set: { updateAt: new Date() }
                 }
               );
+              updateResult = {
+                ...updateResult,
+                acknowledged: updateResult.acknowledged && userResponseUpdated.acknowledged,
+                matchedCount: updateResult.matchedCount + userResponseUpdated.matchedCount,
+                modifiedCount: updateResult.modifiedCount + userResponseUpdated.modifiedCount
+              };
             }
           }
         }
       }
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(`Error removing documents from collection ${collectionName}: ${error.message}`);
-      }
+      return { deleteResult, updateResult };
+    } catch (e) {
+      const error = e as Error;
+      throw new Error(`Error removing documents from collection ${collectionName}: ${error?.message}`);
     }
   }
 
-  async clearDB(): Promise<void> {
+  async clearDB(): Promise<boolean> {
     try {
       const collections = await this._db.listCollections().toArray();
+      let deleteResult = true;
       for (let i = 0; i < collections.length; i++) {
-        const collection = this.getCollection(collections[i].name);
-        await collection.deleteMany({});
+        const deleteResponse = await this.getCollection(collections[i].name).deleteMany({});
+        deleteResult = deleteResult && deleteResponse.acknowledged;
       }
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(`Error removing documents from database ${error.message}`);
-      }
+      return deleteResult;
+    } catch (e) {
+      const error = e as Error;
+      throw new Error(`Error clearing documents from database ${error.message}`);
     }
   }
 }

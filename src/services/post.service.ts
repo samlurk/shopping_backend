@@ -1,4 +1,4 @@
-import { ObjectId } from 'mongodb';
+import { type InsertOneResult, ObjectId } from 'mongodb';
 import { notFound } from '../helpers/api-response.helper';
 import type { CreatePostDto } from '../interfaces/post.interface';
 import PostModel from '../models/post.model';
@@ -19,7 +19,7 @@ export class PostService {
     this.userService = new UserService();
   }
 
-  async createOnePost(author: string, createPostDto: CreatePostDto): Promise<void> {
+  async createOnePost(author: string, createPostDto: CreatePostDto): Promise<InsertOneResult<PostModel>> {
     const mongoDbService = new MongoDbService();
     const responseCategory = await this.categoryService.getAllCategories({
       or: [
@@ -34,8 +34,8 @@ export class PostService {
         : responseCategory[0];
     const responseUser = await this.userService.getOneUser({ _id: new ObjectId(author), fields: '_id' });
     const postModel = new PostModel(createPostDto, category, responseUser);
-    await mongoDbService.Collections.posts.insertOne(postModel);
-    await mongoDbService.closeDB();
+    const postInsertResult = await mongoDbService.Collections.posts.insertOne(postModel);
+    return postInsertResult;
   }
 
   async getAllPosts(reqQuery: object): Promise<PostModel[]> {
@@ -195,7 +195,7 @@ export class PostService {
       $inc: { numViews: 1 },
       $set: { updateAt: new Date() }
     });
-    await mongoDbService.closeDB();
+
     return responsePost;
   }
 
@@ -353,7 +353,7 @@ export class PostService {
       $inc: { numViews: 1 },
       $set: { updateAt: new Date() }
     });
-    await mongoDbService.closeDB();
+
     return responsePost;
   }
 
@@ -373,7 +373,6 @@ export class PostService {
       { $set: { ...postToUpdate, updateAt: new Date() } }
     );
     if (responsePost.modifiedCount === 0) throw notFound('post/edit-post/post-not-found');
-    await mongoDbService.closeDB();
   }
 
   async deleteOnePost(postId: string): Promise<void> {
@@ -382,7 +381,6 @@ export class PostService {
       _id: new ObjectId(postId)
     });
     if (responsePost.deletedCount === 0) throw notFound('post/post-not-found');
-    await mongoDbService.closeDB();
   }
 
   async likePost(postId: string, userId: string): Promise<string> {
@@ -435,7 +433,7 @@ export class PostService {
         }
       );
     }
-    await mongoDbService.closeDB();
+
     return 'Post liked';
   }
 
@@ -489,7 +487,7 @@ export class PostService {
         }
       );
     }
-    await mongoDbService.closeDB();
+
     return 'Post disliked';
   }
 }

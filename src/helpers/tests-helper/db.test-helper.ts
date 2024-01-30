@@ -18,7 +18,6 @@ const close = async (): Promise<void> => {
 const clear = async (): Promise<void> => {
   const mongoDbService = new MongoDbService();
   await mongoDbService.clearDB();
-  await mongoDbService.closeDB();
 };
 
 export default { connect, clear, close };

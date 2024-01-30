@@ -1,4 +1,4 @@
-import { ObjectId } from 'mongodb';
+import { type InsertOneResult, ObjectId } from 'mongodb';
 import { notFound } from '../helpers/api-response.helper';
 import type { CreateCategoryDto } from '../interfaces/category.interface';
 import CategoryModel from '../models/category.model';
@@ -7,11 +7,11 @@ import type { UpdateCategoryDto } from '../types/category.type';
 import MongoDbService from './mongo.service';
 
 export default class CategoryService {
-  async createOneCategory(createCategoryDto: CreateCategoryDto): Promise<void> {
+  async createOneCategory(createCategoryDto: CreateCategoryDto): Promise<InsertOneResult<CategoryModel>> {
     const mongoDbService = new MongoDbService();
     const categoryModel = new CategoryModel(createCategoryDto);
-    await mongoDbService.Collections.categories.insertOne(categoryModel);
-    await mongoDbService.closeDB();
+    const categoryInsertResult = await mongoDbService.Collections.categories.insertOne(categoryModel);
+    return categoryInsertResult;
   }
 
   async getOneCategory(reqQuery: object): Promise<CategoryModel> {
@@ -20,7 +20,7 @@ export default class CategoryService {
     const responseCategory = await mongoDbService.Collections.categories.findOne(match, { projection });
 
     if (responseCategory === null) throw notFound('category/category-not-found');
-    await mongoDbService.closeDB();
+
     return responseCategory;
   }
 
@@ -39,7 +39,7 @@ export default class CategoryService {
       .toArray();
 
     if (responseCategory.length === 0) throw notFound('category/all-categories/no-categories-found');
-    await mongoDbService.closeDB();
+
     return responseCategory;
   }
 
@@ -50,7 +50,6 @@ export default class CategoryService {
       { $set: { ...updateCategory, updateAt: new Date() } }
     );
     if (responseCategory.modifiedCount === 0) throw notFound('category/edit-category/category-not-found');
-    await mongoDbService.closeDB();
   }
 
   async deleteOneCategory(categoryId: string): Promise<void> {
@@ -60,6 +59,5 @@ export default class CategoryService {
     });
     if (responseCategory.deletedCount === 0) throw notFound('category/category-not-found');
     await mongoDbService.removeAllReferences(mongoDbService.Collections.users.collectionName, new ObjectId(categoryId));
-    await mongoDbService.closeDB();
   }
 }

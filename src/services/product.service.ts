@@ -37,7 +37,6 @@ export class ProductService {
     const vendor = { _id: new ObjectId(vendorId) };
     const productModel = new ProductModel(createProductDto, vendor, category);
     await mongoDbService.Collections.products.insertOne(productModel);
-    await mongoDbService.closeDB();
   }
 
   async getAllProducts(vendorId: string, reqQuery: object): Promise<ProductModel[]> {
@@ -137,7 +136,7 @@ export class ProductService {
       .toArray();
 
     if (responseProduct.length === 0) throw notFound('product/all-products/no-product-found');
-    await mongoDbService.closeDB();
+
     return responseProduct;
   }
 
@@ -234,7 +233,7 @@ export class ProductService {
       ])
       .toArray();
     if (responseProduct === null) throw notFound('product/product-not-found');
-    await mongoDbService.closeDB();
+
     return responseProduct;
   }
 
@@ -248,7 +247,6 @@ export class ProductService {
       mongoDbService.Collections.products.collectionName,
       new ObjectId(productId)
     );
-    await mongoDbService.closeDB();
   }
 
   async updateOneProduct(
@@ -279,6 +277,5 @@ export class ProductService {
       { $set: { ...productToUpdate, updateAt: new Date() } }
     );
     if (responseProduct.matchedCount === 0) throw notFound('product/edit-product/product-not-found');
-    await mongoDbService.closeDB();
   }
 }

@@ -1,7 +1,7 @@
 import type { CreateUserDto } from '../interfaces/user.interface';
 import { encrypt, verified } from '../helpers/bcrypt.helper';
 import UserModel from '../models/user.model';
-import { ObjectId } from 'mongodb';
+import { type InsertOneResult, ObjectId, type UpdateResult, type DeleteResult } from 'mongodb';
 import { forbidden, notFound } from '../helpers/api-response.helper';
 import EmailService from '../services/email.service';
 import { generateToken, verifyToken } from '../helpers/jwt.helper';
@@ -10,7 +10,7 @@ import type { UpdateUserDto } from '../types/user.type';
 import MongoDbService from './mongo.service';
 
 export class UserService {
-  async createOneUser(createUserDto: CreateUserDto): Promise<void> {
+  async createOneUser(createUserDto: CreateUserDto): Promise<InsertOneResult<UserModel>> {
     // Verify if the email and phone entered exist in another registry.
     const mongoDbService = new MongoDbService();
     const isExists = await mongoDbService.Collections.users.findOne(
@@ -27,8 +27,9 @@ export class UserService {
 
     createUserDto.password = await encrypt(createUserDto.password);
     const userModel = new UserModel(createUserDto);
-    await mongoDbService.Collections.users.insertOne(userModel);
-    await mongoDbService.closeDB();
+    const userInsertedResult = await mongoDbService.Collections.users.insertOne(userModel);
+
+    return userInsertedResult;
   }
 
   async getAllUsers(reqQuery: object): Promise<UserModel[]> {
@@ -44,7 +45,7 @@ export class UserService {
       ])
       .toArray();
     if (responseUser.length === 0) throw notFound('user/all-users/no-users-found');
-    await mongoDbService.closeDB();
+
     return responseUser;
   }
 
@@ -54,16 +55,26 @@ export class UserService {
     const responseUser = await mongoDbService.Collections.users.findOne(match, { projection });
 
     if (responseUser === null) throw notFound('user/user-not-found');
-    await mongoDbService.closeDB();
+
     return responseUser;
   }
 
-  async deleteOneUser(userId: string): Promise<void> {
+  async deleteOneUser(userId: string): Promise<{ deleteResult: DeleteResult; updateResult: UpdateResult }> {
     const mongoDbService = new MongoDbService();
-    const responseUser = await mongoDbService.Collections.users.deleteOne({ _id: new ObjectId(userId) });
-    if (responseUser.deletedCount === 0) throw notFound('user/user-not-found');
-    await mongoDbService.removeAllReferences(mongoDbService.Collections.users.collectionName, new ObjectId(userId));
-    await mongoDbService.closeDB();
+    const userResponseDeleted = await mongoDbService.Collections.users.deleteOne({ _id: new ObjectId(userId) });
+    if (userResponseDeleted.deletedCount === 0) throw notFound('user/user-not-found');
+    const referecesDeleted = await mongoDbService.removeAllReferences(
+      mongoDbService.Collections.users.collectionName,
+      new ObjectId(userId)
+    );
+
+    return {
+      deleteResult: {
+        acknowledged: userResponseDeleted.acknowledged,
+        deletedCount: userResponseDeleted.deletedCount + referecesDeleted.deleteResult.deletedCount
+      },
+      updateResult: referecesDeleted.updateResult
+    };
   }
 
   async updateOneUser(
@@ -99,7 +110,6 @@ export class UserService {
       { $set: { ...userToUpdate, updateAt: new Date() } }
     );
     if (responseUser.matchedCount === 0) throw notFound('user/edit-user/user-not-found');
-    await mongoDbService.closeDB();
   }
 
   async blockOneUser(userId: string): Promise<void> {
@@ -109,7 +119,6 @@ export class UserService {
       { $set: { 'metadata.isBlocked': true, updateAt: new Date() } }
     );
     if (responseUser.matchedCount === 0) throw notFound('user/block-user/user-not-found');
-    await mongoDbService.closeDB();
   }
 
   async unblockOneUser(userId: string): Promise<void> {
@@ -132,7 +141,6 @@ export class UserService {
       { _id: new ObjectId(userId) },
       { $set: { password: await encrypt(password), updateAt: new Date() } }
     );
-    await mongoDbService.closeDB();
   }
 
   async forgotOneUserPassword(email: string): Promise<void> {
@@ -154,6 +162,5 @@ export class UserService {
       { _id: new ObjectId(payload._id) },
       { $set: { password: await encrypt(password), updateAt: new Date() } }
     );
-    await mongoDbService.closeDB();
   }
 }

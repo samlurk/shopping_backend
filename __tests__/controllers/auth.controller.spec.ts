@@ -2,7 +2,7 @@ import { badCredentials, created, ok, serverError } from '../../src/helpers/api-
 import AuthController from '../../src/controllers/auth.controller';
 import AuthService from '../../src/services/auth.service';
 import { HttpStatusCode } from '../../src/enums/httpStatusCode.enum';
-import { mockLoginUserDto, mockSignUpUserDto } from '../../src/fixtures/auth.fixture';
+import { fakeUserLoginData, fakeUserSignUpData } from '../../src/fixtures/auth.fixture';
 import { mockRequest, mockResponse } from '../../src/helpers/tests-helper/mock-controller.test-helper';
 
 jest.mock('../../src/services/auth.service');
@@ -23,13 +23,13 @@ describe('Auth Controller', () => {
 
     it('should handle when login sucess', async () => {
       const mockToken = { accessToken: 'fakeAuthToken' };
-      const req = mockRequest(mockLoginUserDto);
+      const req = mockRequest(fakeUserLoginData);
       const res = mockResponse();
 
       authService.loginUser.mockResolvedValue(mockToken);
       await authController.login(req, res);
 
-      expect(authService.loginUser).toHaveBeenCalledWith(mockLoginUserDto);
+      expect(authService.loginUser).toHaveBeenCalledWith(fakeUserLoginData);
       expect(authService.loginUser).toBeCalledTimes(1);
       expect(res.cookie).toHaveBeenCalledWith('token', mockToken.accessToken, { httpOnly: true });
       expect(res.status).toHaveBeenCalledWith(HttpStatusCode.OK);
@@ -37,7 +37,7 @@ describe('Auth Controller', () => {
     });
 
     it('should handle custom errors', async () => {
-      const req = mockRequest(mockLoginUserDto);
+      const req = mockRequest(fakeUserLoginData);
       const res = mockResponse();
 
       const throwingError = badCredentials('auth/login/wrong-password');
@@ -50,7 +50,7 @@ describe('Auth Controller', () => {
     });
 
     it('should handle unexpected errors', async () => {
-      const req = mockRequest(mockLoginUserDto);
+      const req = mockRequest(fakeUserLoginData);
       const res = mockResponse();
 
       const unexpectedError = new Error('Internal Server Error');
@@ -70,13 +70,13 @@ describe('Auth Controller', () => {
     it('should handle when signup sucess', async () => {
       const mockToken = { accessToken: 'fakeAuthToken' };
 
-      const req = mockRequest(mockSignUpUserDto);
+      const req = mockRequest(fakeUserSignUpData);
       const res = mockResponse();
 
       authService.signupUser.mockResolvedValue(mockToken);
       await authController.signup(req, res);
 
-      expect(authService.signupUser).toHaveBeenCalledWith(mockSignUpUserDto);
+      expect(authService.signupUser).toHaveBeenCalledWith(fakeUserSignUpData);
       expect(authService.signupUser).toBeCalledTimes(1);
       expect(res.cookie).toHaveBeenCalledWith('token', mockToken.accessToken, { httpOnly: true });
       expect(res.status).toHaveBeenCalledWith(HttpStatusCode.CREATED);
@@ -84,7 +84,7 @@ describe('Auth Controller', () => {
     });
 
     it('should handle throwing custom errors', async () => {
-      const req = mockRequest(mockLoginUserDto);
+      const req = mockRequest(fakeUserLoginData);
       const res = mockResponse();
 
       const throwingError = badCredentials('auth/signup/user-not-found');
@@ -97,7 +97,7 @@ describe('Auth Controller', () => {
     });
 
     it('should handle unexpected errors', async () => {
-      const req = mockRequest(mockLoginUserDto);
+      const req = mockRequest(fakeUserLoginData);
       const res = mockResponse();
 
       const unexpectedError = new Error('Internal Server Error');

@@ -1,4 +1,4 @@
-export const mockSignUpUserDto = {
+export const fakeUserSignUpData = {
   firstName: 'testfirstname',
   lastName: 'testlastname',
   address: 'testaddress',
@@ -8,7 +8,7 @@ export const mockSignUpUserDto = {
   password: 'testpassword'
 };
 
-export const mockLoginUserDto = {
+export const fakeUserLoginData = {
   email: 'testemail',
   password: 'testpassword'
 };
